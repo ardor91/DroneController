@@ -76,6 +76,7 @@
             this.markupBtn.TabIndex = 2;
             this.markupBtn.Text = "Create Paths";
             this.markupBtn.UseVisualStyleBackColor = true;
+            this.markupBtn.Click += new System.EventHandler(this.markupBtn_Click);
             // 
             // txtDroneCount
             // 

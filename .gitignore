@@ -3,3 +3,7 @@
 ################################################################################
 
 /DroneController/.vs/DroneController/v15/Server/sqlite3
+/.vs
+/DroneController/.vs/DroneController/v15
+/DroneController/bin
+/DroneController/obj

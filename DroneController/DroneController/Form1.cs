@@ -167,5 +167,90 @@ namespace DroneController
                 isPickingStart = true;
             }
         }
+
+        private void markupBtn_Click(object sender, EventArgs e)
+        {
+            if(polygon.Count < 3)
+            {
+                MessageBox.Show("Create correct polygon!");
+                return;
+            }
+            //select start & end point
+            var basePoint = startPoint;
+            var nearestPoint = polygon[0];
+            var farestPoint = polygon[0];
+            var minDistance = getDistance(basePoint, nearestPoint);
+            var maxDistance = minDistance;
+            foreach(var point in polygon)
+            {
+                var distance = getDistance(basePoint, point);
+                if(distance < minDistance)
+                {
+                    minDistance = distance;
+                    nearestPoint = point;
+                }
+                if(distance > maxDistance)
+                {
+                    maxDistance = distance;
+                    farestPoint = point;
+                }
+            }
+
+            //get angle of new polared coord axis
+            double angle = getAngle(nearestPoint, farestPoint, new Point(farestPoint.X, nearestPoint.Y));
+
+            //search points less X0 and more X0
+            bool havePointsLess0 = false;
+            bool havePointsMore0 = false;
+
+            foreach(var point in polygon)
+            {
+                var tPoint = getTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
+                if(tPoint.X < 0)
+                {
+                    havePointsLess0 = true;
+                    break;
+                }
+            }
+
+            foreach (var point in polygon)
+            {
+                var tPoint = getTranslatedPoint(angle, point);
+                if (tPoint.X > nearestPoint.X)
+                {
+                    havePointsMore0 = true;
+                    break;
+                }
+            }
+        }
+
+        public double getDistance(Point p1, Point p2)
+        {
+            return Math.Abs(Math.Sqrt((Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2))));
+        }
+
+        public PointF getTranslatedPoint(double angle, Point p)
+        {
+            var newPoint = new PointF();
+            newPoint.X = (float)(p.X * Math.Cos(angle) - p.Y * Math.Sin(angle));
+            newPoint.Y = (float)(p.X * Math.Sin(angle) + p.Y * Math.Cos(angle));
+
+            return newPoint;
+        }
+
+        public double getAngle(Point p0, Point p1, Point p2)
+        {
+            var katet = Math.Abs(p2.X - p0.X);
+            var katet2 = Math.Abs(p1.Y - p0.Y);
+            var gipo = Math.Sqrt(Math.Pow(katet, 2) + Math.Pow(katet2, 2));
+
+            return Math.Acos(katet / gipo) * (180 / Math.PI);
+
+            /*var skalar = (p1.X - p0.X) * (p2.X - p0.X) + (p1.Y - p0.Y) * (p2.Y - p0.Y);
+            var length1 = getDistance(p0, p1);
+            var length2 = getDistance(p0, p2);
+
+            return Math.Acos(skalar / (length1 * length2));*/
+        }
     }
 }
