@@ -1,0 +1,9 @@
+E:\EducationProjects\MKatsuba\C#\DroneController\DroneController\bin\Debug\DroneController.exe.config
+E:\EducationProjects\MKatsuba\C#\DroneController\DroneController\bin\Debug\DroneController.exe
+E:\EducationProjects\MKatsuba\C#\DroneController\DroneController\bin\Debug\DroneController.pdb
+E:\EducationProjects\MKatsuba\C#\DroneController\DroneController\obj\Debug\DroneController.csprojResolveAssemblyReference.cache
+E:\EducationProjects\MKatsuba\C#\DroneController\DroneController\obj\Debug\DroneController.Form1.resources
+E:\EducationProjects\MKatsuba\C#\DroneController\DroneController\obj\Debug\DroneController.Properties.Resources.resources
+E:\EducationProjects\MKatsuba\C#\DroneController\DroneController\obj\Debug\DroneController.csproj.GenerateResource.Cache
+E:\EducationProjects\MKatsuba\C#\DroneController\DroneController\obj\Debug\DroneController.exe
+E:\EducationProjects\MKatsuba\C#\DroneController\DroneController\obj\Debug\DroneController.pdb
