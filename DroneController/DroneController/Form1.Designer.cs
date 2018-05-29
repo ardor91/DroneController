@@ -46,6 +46,15 @@
             this.drawTimer = new System.Windows.Forms.Timer(this.components);
             this.label6 = new System.Windows.Forms.Label();
             this.lblSquare = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.lblAngle = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
+            this.label8 = new System.Windows.Forms.Label();
+            this.lblLessCount = new System.Windows.Forms.Label();
+            this.lblMoreCount = new System.Windows.Forms.Label();
+            this.lblUpCount = new System.Windows.Forms.Label();
+            this.lblDownCount = new System.Windows.Forms.Label();
+            this.button2 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // panel1
@@ -200,11 +209,103 @@
             this.lblSquare.TabIndex = 15;
             this.lblSquare.Text = "0";
             // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(181, 29);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(70, 13);
+            this.label7.TabIndex = 16;
+            this.label7.Text = "Result Angle:";
+            // 
+            // lblAngle
+            // 
+            this.lblAngle.AutoSize = true;
+            this.lblAngle.Location = new System.Drawing.Point(264, 29);
+            this.lblAngle.Name = "lblAngle";
+            this.lblAngle.Size = new System.Drawing.Size(13, 13);
+            this.lblAngle.TabIndex = 17;
+            this.lblAngle.Text = "0";
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(1066, 70);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(146, 55);
+            this.button1.TabIndex = 18;
+            this.button1.Text = "Draw Rect";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(358, 9);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(184, 13);
+            this.label8.TabIndex = 19;
+            this.label8.Text = "Points:  LESS   MORE   UP    DOWN";
+            // 
+            // lblLessCount
+            // 
+            this.lblLessCount.AutoSize = true;
+            this.lblLessCount.Location = new System.Drawing.Point(407, 29);
+            this.lblLessCount.Name = "lblLessCount";
+            this.lblLessCount.Size = new System.Drawing.Size(13, 13);
+            this.lblLessCount.TabIndex = 20;
+            this.lblLessCount.Text = "0";
+            // 
+            // lblMoreCount
+            // 
+            this.lblMoreCount.AutoSize = true;
+            this.lblMoreCount.Location = new System.Drawing.Point(446, 29);
+            this.lblMoreCount.Name = "lblMoreCount";
+            this.lblMoreCount.Size = new System.Drawing.Size(13, 13);
+            this.lblMoreCount.TabIndex = 21;
+            this.lblMoreCount.Text = "0";
+            // 
+            // lblUpCount
+            // 
+            this.lblUpCount.AutoSize = true;
+            this.lblUpCount.Location = new System.Drawing.Point(478, 29);
+            this.lblUpCount.Name = "lblUpCount";
+            this.lblUpCount.Size = new System.Drawing.Size(13, 13);
+            this.lblUpCount.TabIndex = 22;
+            this.lblUpCount.Text = "0";
+            // 
+            // lblDownCount
+            // 
+            this.lblDownCount.AutoSize = true;
+            this.lblDownCount.Location = new System.Drawing.Point(512, 29);
+            this.lblDownCount.Name = "lblDownCount";
+            this.lblDownCount.Size = new System.Drawing.Size(13, 13);
+            this.lblDownCount.TabIndex = 23;
+            this.lblDownCount.Text = "0";
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(1066, 148);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(146, 55);
+            this.button2.TabIndex = 24;
+            this.button2.Text = "Clear Debug";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1217, 591);
+            this.Controls.Add(this.button2);
+            this.Controls.Add(this.lblDownCount);
+            this.Controls.Add(this.lblUpCount);
+            this.Controls.Add(this.lblMoreCount);
+            this.Controls.Add(this.lblLessCount);
+            this.Controls.Add(this.label8);
+            this.Controls.Add(this.button1);
+            this.Controls.Add(this.lblAngle);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.lblSquare);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.lblCursorY);
@@ -247,6 +348,15 @@
         private System.Windows.Forms.Timer drawTimer;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label lblSquare;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label lblAngle;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label lblLessCount;
+        private System.Windows.Forms.Label lblMoreCount;
+        private System.Windows.Forms.Label lblUpCount;
+        private System.Windows.Forms.Label lblDownCount;
+        private System.Windows.Forms.Button button2;
     }
 }
 
