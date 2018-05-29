@@ -13,6 +13,7 @@ namespace DroneController
     public partial class Form1 : Form
     {
         public List<Point> polygon;
+        public List<Point> translatedPolygon;
         public Point startPoint;
         public bool isDrawing = false;
         public bool isPickingStart = false;
@@ -24,12 +25,16 @@ namespace DroneController
 
         public List<Debug> debug;
         public List<Triangle> triangles;
+        public List<Line> lines;
+        public Function Func = new Function();
         public Form1()
         {
             InitializeComponent();
             polygon = new List<Point>();
+            translatedPolygon = new List<Point>();
             debug = new List<Debug>();
             triangles = new List<Triangle>();
+            lines = new List<Line>();
             prepareGraphics();    
         }
 
@@ -97,6 +102,18 @@ namespace DroneController
                 }
             }
 
+            //draw translated polygon
+            if (translatedPolygon.Count > 0)
+            {
+                var prev = translatedPolygon[0];
+                for (int i = 1; i < translatedPolygon.Count; i++)
+                {
+                    drawLine(Color.OrangeRed, 2, false, prev, translatedPolygon[i]);
+                    prev = translatedPolygon[i];
+                }
+                drawLine(Color.OrangeRed, 2, false, prev, translatedPolygon[0]);
+            }
+
             //draw startPoint
             if (startPoint != null)
             {
@@ -107,15 +124,21 @@ namespace DroneController
             }
 
             //draw debug
-            /*foreach(var deb in debug)
+            foreach(var deb in debug)
             {
                 deb.DrawObject(drawArea, debugPen);
-            }*/
+            }
 
             //draw triangles
             foreach (var tri in triangles)
             {
                 tri.DrawObject(drawArea, triPen);
+            }
+
+            //draw lines
+            foreach (var lni in lines)
+            {
+                lni.DrawObject(drawArea, triPen);
             }
         }
 
@@ -124,7 +147,7 @@ namespace DroneController
             if (isDrawing)
             {
                 isDrawing = false;
-                calculateSquare();
+                Func.CalculateSquare(polygon);
                 //end drawing
             }
             else
@@ -144,7 +167,7 @@ namespace DroneController
                 if (e.Button == MouseButtons.Right)
                 {
                     isDrawing = false;
-                    calculateSquare();
+                    Func.CalculateSquare(polygon);
                 }
             }
             if (isPickingStart)
@@ -161,28 +184,6 @@ namespace DroneController
             currentMousePosition = new Point(e.Location.X, e.Location.Y);
             lblCursorX.Text = e.Location.X + "";
             lblCursorY.Text = e.Location.Y + "";
-        }
-
-        private void calculateSquare()
-        {
-            int sum1 = 0, sum2 = 0;
-            for (int i = 0; i < polygon.Count; i++)
-            {
-                if (i < polygon.Count - 1)
-                {
-                    sum1 += (polygon[i].X * polygon[i + 1].Y);
-                    sum2 += (polygon[i].Y * polygon[i + 1].X);
-                }
-                else
-                {
-                    sum1 += (polygon[i].X * polygon[0].Y);
-                    sum2 += (polygon[i].Y * polygon[0].X);
-                }
-            }
-            int result = sum2 - sum1;
-            double square = Math.Abs(result / 2);
-
-            lblSquare.Text = square.ToString();
         }
 
         private void btnPickStart_Click(object sender, EventArgs e)
@@ -206,7 +207,7 @@ namespace DroneController
                 MessageBox.Show("Create correct polygon!");
                 return;
             }
-            bool isSplitted = true;
+            /*bool isSplitted = true;
             while (polygon.Count >= 3 && isSplitted)
             {
                 isSplitted = false;
@@ -226,32 +227,36 @@ namespace DroneController
                     }
                 }
             }
-            MessageBox.Show("Finished");
+            MessageBox.Show("Finished");*/
             /*foreach(Point rem in toRemove)
             {
                 polygon.Remove(rem);
             }*/
-            return;
+            //return;
 
             //select start & end point
             var basePoint = startPoint;
             var nearestPoint = polygon[0];
+            var nearestPointIndex = 0;
+            var farestPointIndex = 0;
             var farestPoint = polygon[0];
-            var minDistance = getDistance(basePoint, nearestPoint);
+            var minDistance = Func.GetDistance(basePoint, nearestPoint);
             var maxDistance = minDistance;
 
-            foreach (var point in polygon)
+            for (int i = 0; i < polygon.Count; i++)
             {
-                var distance = getDistance(basePoint, point);
+                var distance = Func.GetDistance(basePoint, polygon[i]);
                 if (distance < minDistance)
                 {
                     minDistance = distance;
-                    nearestPoint = point;
+                    nearestPoint = polygon[i];
+                    nearestPointIndex = i;
                 }
                 if (distance > maxDistance)
                 {
                     maxDistance = distance;
-                    farestPoint = point;
+                    farestPoint = polygon[i];
+                    farestPointIndex = i;
                 }
             }
 
@@ -259,16 +264,17 @@ namespace DroneController
             AddDebug(farestPoint);
             AddDebug(nearestPoint, farestPoint);
             //get angle of new polared coord axis
-            double angle = getAngle(nearestPoint, farestPoint, new Point(farestPoint.X, nearestPoint.Y));
+            double angle = Func.GetAngle(nearestPoint, farestPoint, new Point(farestPoint.X, nearestPoint.Y));
             lblAngle.Text = angle.ToString();
 
             var d = new Debug(ObjectType.RECTANGLE);
-                
-            
 
+
+            translatedPolygon.Clear();
             foreach (var point in polygon)
             {
-                var tPoint = getTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
+                var tPoint = Func.GetTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
+                translatedPolygon.Add(new Point((int)tPoint.X, (int)tPoint.Y));
                 //AddDebug(new Point((int)tPoint.X + nearestPoint.X, (int)tPoint.Y + nearestPoint.Y));
                 d.AddPoint(new Point((int)tPoint.X + nearestPoint.X, (int)tPoint.Y + nearestPoint.Y));                
             }
@@ -281,10 +287,10 @@ namespace DroneController
             bool havePointsDown0 = false;
             int less = 0, more = 0, up = 0, down = 0;
 
-            foreach (var point in polygon)
+            foreach (var point in translatedPolygon)
             {
-                var tPoint = getTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
-                if (tPoint.X < 0)
+                //var tPoint = Func.GetTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
+                if (point.X < 0)
                 {
                     havePointsLess0 = true;
                     less++;
@@ -292,10 +298,10 @@ namespace DroneController
                 }
             }
 
-            foreach (var point in polygon)
+            foreach (var point in translatedPolygon)
             {
-                var tPoint = getTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
-                if (tPoint.X > 0)
+                //var tPoint = Func.GetTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
+                if (point.X > 0)
                 {
                     havePointsMore0 = true;
                     more++;
@@ -303,10 +309,10 @@ namespace DroneController
                 }
             }
 
-            foreach (var point in polygon)
+            foreach (var point in translatedPolygon)
             {
-                var tPoint = getTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
-                if (tPoint.Y > 0)
+                //var tPoint = Func.GetTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
+                if (point.Y > 0)
                 {
                     havePointsUpper0 = true;
                     up++;
@@ -314,14 +320,81 @@ namespace DroneController
                 }
             }
 
-            foreach (var point in polygon)
+            foreach (var point in translatedPolygon)
             {
-                var tPoint = getTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
-                if (tPoint.Y < 0)
+                //var tPoint = Func.GetTranslatedPoint(angle, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
+                if (point.Y < 0)
                 {
                     havePointsDown0 = true;
                     down++;
                     //break;
+                }
+            }
+
+            int step = 20;
+            int nextNearestIndex = nearestPointIndex;
+            int prevNearestIndex = nearestPointIndex;
+            Line topLine = null, bottomLine = null;
+            farestPoint = Func.GetTranslatedPoint(angle, nearestPoint, farestPoint);
+            nearestPoint = Func.GetTranslatedPoint(angle, nearestPoint, nearestPoint);
+            
+            Point nextNearestPoint = nearestPoint;
+            Point prevNearestPoint = nearestPoint;
+            bool topFinished = false;
+            bool bottomFinished = false;
+
+            if(!havePointsLess0)
+            {
+                for (int i = nearestPoint.X + step; i < farestPoint.X; i += step)
+                {
+                    //if (topFinished && bottomFinished) break;
+                    if (!topFinished && (topLine == null || i >= nextNearestPoint.X))
+                    {
+                        //get next point clockwise
+                        nextNearestIndex++;
+                        if (nextNearestIndex >= farestPointIndex)
+                        {
+                            nextNearestIndex = farestPointIndex;
+                            topFinished = true;
+                        }
+
+                        var t = nextNearestPoint;
+                        nextNearestPoint = translatedPolygon[nextNearestIndex];
+                        topLine = new Line(t, nextNearestPoint);
+                        //AddDebug(Color.Black, t, nextNearestPoint);
+                    }
+
+                    if (!bottomFinished && (bottomLine == null || i >= prevNearestPoint.X))
+                    {
+                        //get next point counter clockwise
+                        prevNearestIndex--;
+                        if (prevNearestIndex <= farestPointIndex && prevNearestIndex >= 0)
+                        {
+                            prevNearestIndex = farestPointIndex;
+                            bottomFinished = true;
+                        }
+                        if (prevNearestIndex < 0) prevNearestIndex = translatedPolygon.Count - 1;
+
+                        var t = prevNearestPoint;
+                        prevNearestPoint = translatedPolygon[prevNearestIndex];
+                        bottomLine = new Line(t, prevNearestPoint);
+                        //AddDebug(Color.Black, t, prevNearestPoint);
+                    }
+
+                    //if (nextNearestIndex == prevNearestIndex) break;
+
+                    //get next vertical line
+                    var nY1L = topLine.P2.Y > topLine.P1.Y ? topLine.P1.Y : topLine.P2.Y;//Math.Abs(topLine.P1.Y - topLine.P2.Y);
+                    var nY1G = topLine.P2.Y > topLine.P1.Y ? topLine.P2.Y : topLine.P1.Y;
+                    nY1G -= nY1L;
+
+                    var pY1L = bottomLine.P2.Y > bottomLine.P1.Y ? bottomLine.P1.Y : bottomLine.P2.Y;
+                    var pY1G = bottomLine.P2.Y > bottomLine.P1.Y ? bottomLine.P2.Y : bottomLine.P1.Y;
+                    pY1G -= pY1L;
+
+                    var y1 = ((nY1G * (i - topLine.P1.X)) / (topLine.P2.X - topLine.P1.X)) + nY1L;
+                    var y2 = ((pY1G * (i - bottomLine.P1.X)) / (bottomLine.P2.X - bottomLine.P1.X)) + pY1L;//prevNearestPoint.X;
+                    lines.Add(new Line(i, y1, i, y2));
                 }
             }
 
@@ -331,40 +404,17 @@ namespace DroneController
             lblDownCount.Text = down.ToString();
         }
 
-        public double getDistance(Point p1, Point p2)
-        {
-            return Math.Abs(Math.Sqrt((Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2))));
-        }
-
-        public PointF getTranslatedPoint(double angle, Point p)
-        {
-            var newPoint = new PointF();
-            var tAngle = angle * (Math.PI / 180);
-            newPoint.X = (float)(p.X * Math.Cos(tAngle) - p.Y * Math.Sin(tAngle));
-            newPoint.Y = (float)(p.X * Math.Sin(tAngle) + p.Y * Math.Cos(tAngle));
-
-            return newPoint;
-        }
-
-        public double getAngle(Point p0, Point p1, Point p2)
-        {
-            /*var katet = Math.Abs(p2.X - p0.X);
-            var katet2 = Math.Abs(p1.Y - p0.Y);
-            var gipo = Math.Sqrt(Math.Pow(katet, 2) + Math.Pow(katet2, 2));
-
-            return Math.Acos(katet / gipo) * (180 / Math.PI);*/
-
-            var skalar = (p1.X - p0.X) * (p2.X - p0.X) + (p1.Y - p0.Y) * (p2.Y - p0.Y);
-            var length1 = getDistance(p0, p1);
-            var length2 = getDistance(p0, p2);
-
-            return Math.Acos(skalar / (length1 * length2)) * (180 / Math.PI);
-        }
-
         public void AddDebug(params Point[] p)
         {
             var d = new Debug(p.Length == 1 ? ObjectType.POINT : p.Length == 2 ? ObjectType.LINE : ObjectType.RECTANGLE);
             foreach(var pp in p)
+                d.AddPoint(pp);
+            debug.Add(d);
+        }
+        public void AddDebug(Color color, params Point[] p)
+        {
+            var d = new Debug(p.Length == 1 ? ObjectType.POINT : p.Length == 2 ? ObjectType.LINE : ObjectType.RECTANGLE, new List<Point>(), color);
+            foreach (var pp in p)
                 d.AddPoint(pp);
             debug.Add(d);
         }
@@ -377,10 +427,11 @@ namespace DroneController
         private void button1_Click(object sender, EventArgs e)
         {
             polygon.Clear();
-            polygon.Add(new Point(300, 300));
-            polygon.Add(new Point(300, 200));
-            polygon.Add(new Point(200, 200));
-            polygon.Add(new Point(200, 300));
+            polygon.Add(new Point(0, 0));
+            polygon.Add(new Point(132, 132));
+            polygon.Add(new Point(204, 302));
+            polygon.Add(new Point(50, 209));
+            startPoint = new Point(-40, 10);
         }
 
         public void triangulationMarkup(int threshold)
@@ -398,13 +449,13 @@ namespace DroneController
                 flag = false;
                 for(int i=1; i<polygon.Count;i++)
                 {
-                    if(getDistance(polygon[i-1], polygon[i]) > threshold)
+                    if(Func.GetDistance(polygon[i-1], polygon[i]) > threshold)
                     {
                         flag = true;
                         break;
                     }
                 }
-                if (getDistance(polygon[polygon.Count-1], polygon[0]) > threshold)
+                if (Func.GetDistance(polygon[polygon.Count-1], polygon[0]) > threshold)
                 {
                     flag = true;
                     
@@ -416,7 +467,7 @@ namespace DroneController
         {
             var p1 = polygon[startIndex];
             var p2 = polygon[endIndex];
-            var distance = getDistance(p1, p2);
+            var distance = Func.GetDistance(p1, p2);
 
             if(distance > threshold)
             {
@@ -428,76 +479,14 @@ namespace DroneController
             return false;
         }
 
-        public float Sign(Point p1, Point p2, Point p3)
-        {
-            return (p1.X - p3.X) * (p2.Y - p3.Y) - (p2.X - p3.X) * (p1.Y - p3.Y);
-        }
-
-        public bool IsInsideTriangle(Point point, Point p1, Point p2, Point p3)
-        {
-            bool b1, b2, b3;
-
-            b1 = Sign(point, p1, p2) < 0.0f;
-            b2 = Sign(point, p2, p3) < 0.0f;
-            b3 = Sign(point, p3, p1) < 0.0f;
-
-            return ((b1 == b2) && (b2 == b3));
-        }
-
-        public bool IsGoodTriangle(Point p1, Point p2, Point p3, int angleThreshold)
-        {
-            var p1p2 = getDistance(p1, p2);
-            var p1p3 = getDistance(p1, p3);
-            var p2p3 = getDistance(p2, p3);
-
-            if (p1p2 + p1p3 <= p2p3) return false;
-            if (p1p2 + p2p3 <= p1p3) return false;
-            if (p2p3 + p1p3 <= p1p2) return false;
-
-            var p1angle = getAngle(p1, p2, p3);
-            var p2angle = getAngle(p2, p1, p3);
-            var p3angle = getAngle(p3, p2, p1);
-
-            if (p1angle < angleThreshold) return false;
-            if (p2angle < angleThreshold) return false;
-            if (p3angle < angleThreshold) return false;
-
-            var newPoint = new Point((p1.X + p3.X) / 2, (p1.Y + p3.Y) / 2);
-            var zeroPoint = new Point(0, 0);
-            int intersectionsCount = 0;
-            for (int i = 1; i < polygon.Count; i++)
-            {
-                if(IsIntersecting(newPoint, zeroPoint, polygon[i-1], polygon[i]))
-                {
-                    intersectionsCount++;
-                }
-            }
-
-            if (intersectionsCount % 2 == 0) return false;
-
-            //MessageBox.Show((p1angle + p2angle + p3angle).ToString());
-
-            return true;
-        }
-
-        public bool IsIntersecting(Point a, Point b, Point c, Point d)
-        {
-            float denominator = ((b.X - a.X) * (d.Y - c.Y)) - ((b.Y - a.Y) * (d.X - c.X));
-            float numerator1 = ((a.Y - c.Y) * (d.X - c.X)) - ((a.X - c.X) * (d.Y - c.Y));
-            float numerator2 = ((a.Y - c.Y) * (b.X - a.X)) - ((a.X - c.X) * (b.Y - a.Y));
-
-            // Detect coincident lines (has a problem, read below)
-            if (denominator == 0) return numerator1 == 0 && numerator2 == 0;
-
-            float r = numerator1 / denominator;
-            float s = numerator2 / denominator;
-
-            return (r >= 0 && r <= 1) && (s >= 0 && s <= 1);
-        }
-
         private void button2_Click(object sender, EventArgs e)
         {
             debug.Clear();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            lines.Clear();
         }
     }
 }

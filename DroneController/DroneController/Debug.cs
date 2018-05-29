@@ -12,16 +12,26 @@ namespace DroneController
         public ObjectType ObjectType { get; set; }
         public List<Point> Points { get; set; }
 
+        public Color ObjectColor { get; set; }
+
+        public Debug(ObjectType type, List<Point> points, Color color)
+        {
+            ObjectType = type;
+            Points = points;
+            ObjectColor = color;
+        }
         public Debug(ObjectType type, List<Point> points)
         {
             ObjectType = type;
             Points = points;
+            ObjectColor = Color.Red;
         }
 
         public Debug(ObjectType type)
         {
             ObjectType = type;
             Points = new List<Point>();
+            ObjectColor = Color.Red;
         }
 
         public void AddPoint(Point p)
@@ -31,6 +41,7 @@ namespace DroneController
 
         public void DrawObject(Graphics g, Pen p)
         {
+            p.Color = ObjectColor;
             switch(ObjectType)
             {
                 case ObjectType.POINT:
