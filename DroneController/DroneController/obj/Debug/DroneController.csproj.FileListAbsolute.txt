@@ -17,3 +17,12 @@ H:\Projects\DroneController\DroneController\DroneController\obj\Debug\DroneContr
 H:\Projects\DroneController\DroneController\DroneController\obj\Debug\DroneController.csproj.CoreCompileInputs.cache
 H:\Projects\DroneController\DroneController\DroneController\obj\Debug\DroneController.exe
 H:\Projects\DroneController\DroneController\DroneController\obj\Debug\DroneController.pdb
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\bin\Debug\DroneController.exe.config
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\obj\Debug\DroneController.exe
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\obj\Debug\DroneController.pdb
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\bin\Debug\DroneController.exe
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\bin\Debug\DroneController.pdb
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\obj\Debug\DroneController.csprojResolveAssemblyReference.cache
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\obj\Debug\DroneController.Form1.resources
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\obj\Debug\DroneController.Properties.Resources.resources
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\obj\Debug\DroneController.csproj.GenerateResource.Cache
