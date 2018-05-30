@@ -440,6 +440,8 @@ namespace DroneController
             lblDownCount.Text = down.ToString();
         }
 
+        
+
         public void AddDebug(params Point[] p)
         {
             var d = new Debug(p.Length == 1 ? ObjectType.POINT : p.Length == 2 ? ObjectType.LINE : ObjectType.RECTANGLE);
