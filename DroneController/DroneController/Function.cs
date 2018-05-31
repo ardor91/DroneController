@@ -31,6 +31,7 @@ namespace DroneController
 
             return newPoint;
         }
+
         public Point GetTranslatedPoint(double angle, Point offset, Point p)
         {
             p.X -= offset.X;
@@ -41,6 +42,26 @@ namespace DroneController
             newPoint.Y = (int)(p.X * Math.Sin(tAngle) + p.Y * Math.Cos(tAngle));
 
             return newPoint;
+        }
+
+        public Line GetTranslatedLine(double angle, Line l)
+        {
+            var tAngle = angle * (Math.PI / 180);
+            var p1 = new Point((int)(l.P1.X * Math.Cos(tAngle) - l.P1.Y * Math.Sin(tAngle)), (int)(l.P1.X * Math.Sin(tAngle) + l.P1.Y * Math.Cos(tAngle)));
+            var p2 = new Point((int)(l.P2.X * Math.Cos(tAngle) - l.P2.Y * Math.Sin(tAngle)), (int)(l.P2.X * Math.Sin(tAngle) + l.P2.Y * Math.Cos(tAngle)));
+
+            return new Line(p1, p2);
+        }
+        public Line GetTranslatedLine(double angle, Point offset, Line l)
+        {
+            l.P1 = new Point(l.P1.X - offset.X, l.P1.Y - offset.Y);
+            l.P2 = new Point(l.P2.X - offset.X, l.P2.Y - offset.Y);
+
+            var tAngle = angle * (Math.PI / 180);
+            var p1 = new Point((int)(l.P1.X * Math.Cos(tAngle) - l.P1.Y * Math.Sin(tAngle)), (int)(l.P1.X * Math.Sin(tAngle) + l.P1.Y * Math.Cos(tAngle)));
+            var p2 = new Point((int)(l.P2.X * Math.Cos(tAngle) - l.P2.Y * Math.Sin(tAngle)), (int)(l.P2.X * Math.Sin(tAngle) + l.P2.Y * Math.Cos(tAngle)));
+
+            return new Line(p1, p2);
         }
         public double GetAngle(Point p0, Point p1, Point p2)
         {

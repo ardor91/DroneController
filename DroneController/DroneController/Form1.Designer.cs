@@ -56,6 +56,15 @@
             this.lblDownCount = new System.Windows.Forms.Label();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
+            this.button4 = new System.Windows.Forms.Button();
+            this.label9 = new System.Windows.Forms.Label();
+            this.txtAngle = new System.Windows.Forms.TextBox();
+            this.nudAngle = new System.Windows.Forms.NumericUpDown();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.nudWaterSpread = new System.Windows.Forms.NumericUpDown();
+            this.showTemp = new System.Windows.Forms.CheckBox();
+            ((System.ComponentModel.ISupportInitialize)(this.nudAngle)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudWaterSpread)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -66,7 +75,9 @@
             this.panel1.Size = new System.Drawing.Size(712, 712);
             this.panel1.TabIndex = 0;
             this.panel1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseClick);
+            this.panel1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
             this.panel1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseMove);
+            this.panel1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseUp);
             // 
             // startBtn
             // 
@@ -130,7 +141,7 @@
             this.txtWaterSpread.Name = "txtWaterSpread";
             this.txtWaterSpread.Size = new System.Drawing.Size(65, 20);
             this.txtWaterSpread.TabIndex = 6;
-            this.txtWaterSpread.Text = "1";
+            this.txtWaterSpread.Text = "20";
             // 
             // btnDrawPolygon
             // 
@@ -303,11 +314,113 @@
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
+            // button4
+            // 
+            this.button4.Location = new System.Drawing.Point(1066, 270);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(146, 55);
+            this.button4.TabIndex = 26;
+            this.button4.Text = "Stop Timer";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(571, 9);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(34, 13);
+            this.label9.TabIndex = 27;
+            this.label9.Text = "Angle";
+            // 
+            // txtAngle
+            // 
+            this.txtAngle.Location = new System.Drawing.Point(611, 6);
+            this.txtAngle.Name = "txtAngle";
+            this.txtAngle.Size = new System.Drawing.Size(65, 20);
+            this.txtAngle.TabIndex = 28;
+            this.txtAngle.Text = "0";
+            // 
+            // nudAngle
+            // 
+            this.nudAngle.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.nudAngle.Location = new System.Drawing.Point(682, 7);
+            this.nudAngle.Maximum = new decimal(new int[] {
+            365,
+            0,
+            0,
+            0});
+            this.nudAngle.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            -2147483648});
+            this.nudAngle.Name = "nudAngle";
+            this.nudAngle.Size = new System.Drawing.Size(42, 20);
+            this.nudAngle.TabIndex = 29;
+            this.nudAngle.ValueChanged += new System.EventHandler(this.nudAngle_ValueChanged);
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(1073, 349);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(86, 17);
+            this.checkBox1.TabIndex = 30;
+            this.checkBox1.Text = "showOriginal";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
+            // nudWaterSpread
+            // 
+            this.nudWaterSpread.Location = new System.Drawing.Point(1120, 22);
+            this.nudWaterSpread.Maximum = new decimal(new int[] {
+            3650,
+            0,
+            0,
+            0});
+            this.nudWaterSpread.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudWaterSpread.Name = "nudWaterSpread";
+            this.nudWaterSpread.Size = new System.Drawing.Size(42, 20);
+            this.nudWaterSpread.TabIndex = 31;
+            this.nudWaterSpread.Value = new decimal(new int[] {
+            20,
+            0,
+            0,
+            0});
+            this.nudWaterSpread.ValueChanged += new System.EventHandler(this.nudWaterSpread_ValueChanged);
+            // 
+            // showTemp
+            // 
+            this.showTemp.AutoSize = true;
+            this.showTemp.Location = new System.Drawing.Point(1073, 372);
+            this.showTemp.Name = "showTemp";
+            this.showTemp.Size = new System.Drawing.Size(74, 17);
+            this.showTemp.TabIndex = 32;
+            this.showTemp.Text = "showBuild";
+            this.showTemp.UseVisualStyleBackColor = true;
+            this.showTemp.CheckedChanged += new System.EventHandler(this.showTemp_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1217, 795);
+            this.Controls.Add(this.showTemp);
+            this.Controls.Add(this.nudWaterSpread);
+            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.nudAngle);
+            this.Controls.Add(this.txtAngle);
+            this.Controls.Add(this.label9);
+            this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.lblDownCount);
@@ -336,6 +449,8 @@
             this.Controls.Add(this.panel1);
             this.Name = "Form1";
             this.Text = "Form1";
+            ((System.ComponentModel.ISupportInitialize)(this.nudAngle)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudWaterSpread)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -370,6 +485,13 @@
         private System.Windows.Forms.Label lblDownCount;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox txtAngle;
+        private System.Windows.Forms.NumericUpDown nudAngle;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.NumericUpDown nudWaterSpread;
+        private System.Windows.Forms.CheckBox showTemp;
     }
 }
 
