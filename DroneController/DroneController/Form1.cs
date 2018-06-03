@@ -29,10 +29,16 @@ namespace DroneController
         public List<Line> lines;
         public List<Line> originalLines;
         public Function Func = new Function();
+        public Bitmap googleImage = null;
 
         bool showOriginal = true;
         int offsetX = 0;
         int offsetY = 0;
+
+        StaticMap map = new StaticMap();
+        MercatorProjection prj = new MercatorProjection();
+        PointF relativeCenter = new PointF(0, 0);
+
         public Form1()
         {
             InitializeComponent();
@@ -46,6 +52,7 @@ namespace DroneController
             offsetX = panel1.Width / 4;
             offsetY = panel1.Height / 2;
             prepareGraphics();
+            
         }
 
         public void prepareGraphics()
@@ -93,6 +100,11 @@ namespace DroneController
             //draw paths
 
             //draw polygon
+            if (googleImage != null)
+            //panel1.BackgroundImage = googleImage;
+            {
+                drawArea.DrawImage(googleImage, -panel1.Width/4, -panel1.Height/2);
+            }
 
             if (polygon.Count > 0 && showOriginal)
             {
@@ -158,6 +170,7 @@ namespace DroneController
             {
                 lni.DrawObject(drawArea, oriPen);
             }
+            
         }
 
         private void btnDrawPolygon_Click(object sender, EventArgs e)
@@ -207,14 +220,14 @@ namespace DroneController
                 oldMouseX = e.Location.X;
                 oldMouseY = e.Location.Y;
             }
-            currentMousePosition = new Point(e.Location.X - offsetX, e.Location.Y - offsetY);
+            currentMousePosition = new Point(
+                e.Location.X,// - offsetX, 
+                e.Location.Y);// - offsetY);
             lblCursorX.Text = currentMousePosition.X + "";
             lblCursorY.Text = currentMousePosition.Y + "";
 
-            if(mousePressed)
-            {
-
-            }
+            lblLat.Text = (leftBottomCorner.X + currentMousePosition.Y * stepPerX).ToString();
+            lblLng.Text = (leftBottomCorner.Y + (640 - currentMousePosition.X) * stepPerY).ToString();
         }
 
         private void btnPickStart_Click(object sender, EventArgs e)
@@ -479,6 +492,13 @@ namespace DroneController
                 d.AddPoint(pp);
             debug.Add(d);
         }
+        public void AddDebug(Color color, params PointF[] p)
+        {
+            var d = new Debug(p.Length == 1 ? ObjectType.POINT : p.Length == 2 ? ObjectType.LINE : ObjectType.RECTANGLE, new List<Point>(), color);
+            foreach (var pp in p)
+                d.AddPoint(new Point((int) pp.X, (int) pp.Y));
+            debug.Add(d);
+        }
 
         private void markupBtn_Click_1(object sender, EventArgs e)
         {
@@ -593,6 +613,50 @@ namespace DroneController
         private void showTemp_CheckedChanged(object sender, EventArgs e)
         {
 
+        }
+
+        double stepPerX = 0;
+        double stepPerY = 0;
+        PointF leftBottomCorner = new PointF(0, 0);
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            map.Latitude = Convert.ToDouble(txtCenterLat.Text);
+            map.Longitude = Convert.ToDouble(txtCenterLng.Text);
+            googleImage = map.GetImage();
+            relativeCenter = prj.FromLatLngToPoint(Convert.ToDouble(txtCenterLat.Text), Convert.ToDouble(txtCenterLng.Text));
+            var scale = Math.Pow(2, map.Zoom);
+            var pointSW = new PointF((float)(relativeCenter.X - (640 / 2) / scale), (float)(relativeCenter.Y + (640 / 2) / scale));
+            AddDebug(Color.Black, pointSW);
+            var latLonSW = prj.FromPointToLatLong(pointSW);
+
+            var pointNE = new PointF((float)(relativeCenter.X + (640 / 2) / scale), (float)(relativeCenter.Y - (640 / 2) / scale));
+            AddDebug(Color.Red, pointNE);
+            var latLonNE = prj.FromPointToLatLong(pointNE);
+
+            lblLat.Text = latLonSW.X.ToString();
+            lblLng.Text = latLonSW.Y.ToString();
+
+            var diffX = Math.Abs(latLonSW.X - latLonNE.X);
+            var diffY = Math.Abs(latLonSW.Y - latLonNE.Y);
+            stepPerX = diffX / 640.0;
+            stepPerY = diffY / 640.0;
+
+            leftBottomCorner = latLonSW;
+            //MessageBox.Show(diffX + " : " + diffY);
+    }
+
+        private void nudZoom_ValueChanged(object sender, EventArgs e)
+        {
+            var change = map.Zoom - Convert.ToInt32(nudZoom.Value);
+            map.Zoom = Convert.ToInt32(nudZoom.Value);
+            googleImage = map.GetImage();
+            var tPolygon = new List<Point>();
+            foreach(var point in translatedPolygon)
+            {
+                tPolygon.Add(new Point(point.X * change * 2, point.Y * change * 2));
+            }
+            translatedPolygon = tPolygon;
         }
     }
 }

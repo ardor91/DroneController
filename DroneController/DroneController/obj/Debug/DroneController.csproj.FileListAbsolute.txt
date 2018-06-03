@@ -26,3 +26,7 @@ E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneC
 E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\obj\Debug\DroneController.Form1.resources
 E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\obj\Debug\DroneController.Properties.Resources.resources
 E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\obj\Debug\DroneController.csproj.GenerateResource.Cache
+H:\Projects\DroneController\DroneController\DroneController\obj\Debug\DroneController.DoublePanel.resources
+H:\Projects\DroneController\DroneController\DroneController\bin\Debug\GMap.NET.Core.dll
+H:\Projects\DroneController\DroneController\DroneController\bin\Debug\GMap.NET.WindowsForms.dll
+H:\Projects\DroneController\DroneController\DroneController\obj\Debug\DroneController.csproj.CopyComplete
