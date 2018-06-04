@@ -19,6 +19,7 @@ namespace DroneController
         public int Zoom { get; set; }
         public Size Size { get; set; }
         public int Scale { get; set; }
+        public List<PointF> Points { get; set; }
 
         public StaticMap()
         {
@@ -27,16 +28,29 @@ namespace DroneController
             Zoom = 16;
             Size = new Size(640, 640);
             Scale = 2;
+            Points = new List<PointF>();
         }
 
         public Bitmap GetImage()
         {
+            string markerks = "";
+            int i = 1;
+            foreach (var point in Points)
+            {
+                markerks += "&markers=color:blue%7Clabel:" + (i++) + "%7C" + point.X + "," + point.Y;
+            }
             string textUri = STATIC_MAP_URL +
                 "center=" + Latitude + "," + Longitude + "&" +
                 "zoom=" + Zoom + "&" +
                 "size=" + Size.Width + "x" + Size.Height + "&" +
-                "maptype=" + MAP_TYPE + "&" +
-                "key=" + API_KEY;
+                "maptype=" + MAP_TYPE;
+
+            if (Points.Count > 0)
+            {
+                textUri += markerks;
+            }
+
+            textUri += "&key=" + API_KEY;
 
             Uri uri = new Uri(textUri);
 

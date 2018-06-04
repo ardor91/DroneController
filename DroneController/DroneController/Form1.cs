@@ -207,6 +207,9 @@ namespace DroneController
                 startPoint = new Point(e.Location.X - offsetX, e.Location.Y - offsetY);
                 isPickingStart = false;
             }
+            var x = (leftBottomCorner.X + e.Location.X * stepPerX);
+            var y = (leftBottomCorner.Y + (640 - e.Location.Y) * stepPerY);
+            map.Points.Add(new PointF((float)x, (float)y));
         }
         int oldMouseX = 0;
         int oldMouseY = 0;
@@ -225,9 +228,10 @@ namespace DroneController
                 e.Location.Y);// - offsetY);
             lblCursorX.Text = currentMousePosition.X + "";
             lblCursorY.Text = currentMousePosition.Y + "";
-
-            lblLat.Text = (leftBottomCorner.X + currentMousePosition.Y * stepPerX).ToString();
-            lblLng.Text = (leftBottomCorner.Y + (640 - currentMousePosition.X) * stepPerY).ToString();
+            // x - latitude
+            // y - longitude
+            lblLat.Text = (leftBottomCorner.X + currentMousePosition.X * stepPerX).ToString();
+            lblLng.Text = (leftBottomCorner.Y + (640 - currentMousePosition.Y) * stepPerY).ToString();
         }
 
         private void btnPickStart_Click(object sender, EventArgs e)
@@ -623,28 +627,31 @@ namespace DroneController
         {
             map.Latitude = Convert.ToDouble(txtCenterLat.Text);
             map.Longitude = Convert.ToDouble(txtCenterLng.Text);
-            googleImage = map.GetImage();
+            
             relativeCenter = prj.FromLatLngToPoint(Convert.ToDouble(txtCenterLat.Text), Convert.ToDouble(txtCenterLng.Text));
             var scale = Math.Pow(2, map.Zoom);
-            var pointSW = new PointF((float)(relativeCenter.X - (640 / 2) / scale), (float)(relativeCenter.Y + (640 / 2) / scale));
+            var pointSW = new PointF((float)(relativeCenter.X - (640.0 / 2.0) / scale), (float)(relativeCenter.Y + (640.0 / 2.0) / scale));
             AddDebug(Color.Black, pointSW);
             var latLonSW = prj.FromPointToLatLong(pointSW);
 
-            var pointNE = new PointF((float)(relativeCenter.X + (640 / 2) / scale), (float)(relativeCenter.Y - (640 / 2) / scale));
+            var pointNE = new PointF((float)(relativeCenter.X + (640.0 / 2) / scale), (float)(relativeCenter.Y - (640.0 / 2) / scale));
             AddDebug(Color.Red, pointNE);
             var latLonNE = prj.FromPointToLatLong(pointNE);
 
             lblLat.Text = latLonSW.X.ToString();
             lblLng.Text = latLonSW.Y.ToString();
 
-            var diffX = Math.Abs(latLonSW.X - latLonNE.X);
-            var diffY = Math.Abs(latLonSW.Y - latLonNE.Y);
+            var diffX = Math.Abs(latLonSW.X - latLonNE.X); // latitude
+            var diffY = Math.Abs(latLonSW.Y - latLonNE.Y); // longitude
             stepPerX = diffX / 640.0;
             stepPerY = diffY / 640.0;
 
             leftBottomCorner = latLonSW;
+
+            map.Points.AddRange(new List<PointF>() { latLonSW, latLonNE});
+            googleImage = map.GetImage();
             //MessageBox.Show(diffX + " : " + diffY);
-    }
+        }
 
         private void nudZoom_ValueChanged(object sender, EventArgs e)
         {
