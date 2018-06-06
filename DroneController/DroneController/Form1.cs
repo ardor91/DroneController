@@ -30,6 +30,7 @@ namespace DroneController
         public List<Line> originalLines;
         public Function Func = new Function();
         public Bitmap googleImage = null;
+        public bool REDRAW_NEEDED = true;
 
         bool showOriginal = true;
         int offsetX = 0;
@@ -37,7 +38,7 @@ namespace DroneController
 
         StaticMap map = new StaticMap();
         MercatorProjection prj = new MercatorProjection();
-        PointF relativeCenter = new PointF(0, 0);
+        PointD relativeCenter = new PointD(0, 0);
 
         public Form1()
         {
@@ -96,7 +97,8 @@ namespace DroneController
 
         private void drawTimer_Tick(object sender, EventArgs e)
         {
-            drawArea.Clear(Color.White);
+            if (!REDRAW_NEEDED) return;
+            drawArea.Clear(Color.Black);
             //draw paths
 
             //draw polygon
@@ -170,7 +172,7 @@ namespace DroneController
             {
                 lni.DrawObject(drawArea, oriPen);
             }
-            
+            REDRAW_NEEDED = false;
         }
 
         private void btnDrawPolygon_Click(object sender, EventArgs e)
@@ -188,6 +190,7 @@ namespace DroneController
                 isDrawing = true;
                 //start drawing
             }
+            REDRAW_NEEDED = true;
         }
 
         private void panel1_MouseClick(object sender, MouseEventArgs e)
@@ -207,9 +210,10 @@ namespace DroneController
                 startPoint = new Point(e.Location.X - offsetX, e.Location.Y - offsetY);
                 isPickingStart = false;
             }
-            var x = (leftBottomCorner.X + e.Location.X * stepPerX);
-            var y = (leftBottomCorner.Y + (640 - e.Location.Y) * stepPerY);
-            map.Points.Add(new PointF((float)x, (float)y));
+            var longitude = (leftBottomCorner.Longitude + e.Location.X * stepPerX);
+            var latitude = (leftBottomCorner.Latitude + (640 - e.Location.Y) * stepPerY);
+            map.Points.Add(new GpsPoint(latitude, longitude));
+            REDRAW_NEEDED = true;
         }
         int oldMouseX = 0;
         int oldMouseY = 0;
@@ -222,16 +226,18 @@ namespace DroneController
                 drawArea.TranslateTransform((oldMouseX - e.Location.X) * -1, (oldMouseY - e.Location.Y) * -1);
                 oldMouseX = e.Location.X;
                 oldMouseY = e.Location.Y;
+                
             }
             currentMousePosition = new Point(
-                e.Location.X,// - offsetX, 
-                e.Location.Y);// - offsetY);
+                e.Location.X - offsetX, 
+                e.Location.Y - offsetY);
             lblCursorX.Text = currentMousePosition.X + "";
             lblCursorY.Text = currentMousePosition.Y + "";
             // x - latitude
             // y - longitude
-            lblLat.Text = (leftBottomCorner.X + currentMousePosition.X * stepPerX).ToString();
-            lblLng.Text = (leftBottomCorner.Y + (640 - currentMousePosition.Y) * stepPerY).ToString();
+            lblLat.Text = (leftBottomCorner.Latitude + (640 - e.Location.Y) * stepPerY).ToString();
+            lblLng.Text = (leftBottomCorner.Longitude + (e.Location.X) * stepPerX).ToString();
+            REDRAW_NEEDED = true;
         }
 
         private void btnPickStart_Click(object sender, EventArgs e)
@@ -352,10 +358,12 @@ namespace DroneController
                     {
                         
                     }*/
-                    if(!drawTimer.Enabled)
+                    REDRAW_NEEDED = true;
+                    if (!drawTimer.Enabled)
                     {
                         drawTimer_Tick(sender, e);
                     }
+                    //REDRAW_NEEDED = true;
                 }
             }
             catch(Exception ex)
@@ -496,6 +504,20 @@ namespace DroneController
                 d.AddPoint(pp);
             debug.Add(d);
         }
+        public void AddDebug(params PointD[] p)
+        {
+            var d = new Debug(p.Length == 1 ? ObjectType.POINT : p.Length == 2 ? ObjectType.LINE : ObjectType.RECTANGLE);
+            foreach (var pp in p)
+                d.AddPoint(pp.ToPoint());
+            debug.Add(d);
+        }
+        public void AddDebug(Color color, params PointD[] p)
+        {
+            var d = new Debug(p.Length == 1 ? ObjectType.POINT : p.Length == 2 ? ObjectType.LINE : ObjectType.RECTANGLE, new List<Point>(), color);
+            foreach (var pp in p)
+                d.AddPoint(pp.ToPoint());
+            debug.Add(d);
+        }
         public void AddDebug(Color color, params PointF[] p)
         {
             var d = new Debug(p.Length == 1 ? ObjectType.POINT : p.Length == 2 ? ObjectType.LINE : ObjectType.RECTANGLE, new List<Point>(), color);
@@ -572,6 +594,7 @@ namespace DroneController
         private void button3_Click(object sender, EventArgs e)
         {
             lines.Clear();
+            originalLines.Clear();
         }
         bool mousePressed = false;
         private void panel1_MouseDown(object sender, MouseEventArgs e)
@@ -606,6 +629,7 @@ namespace DroneController
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
+            REDRAW_NEEDED = true;
             showOriginal = checkBox1.Checked;
         }
 
@@ -616,40 +640,70 @@ namespace DroneController
 
         private void showTemp_CheckedChanged(object sender, EventArgs e)
         {
-
+            REDRAW_NEEDED = true;
         }
 
         double stepPerX = 0;
         double stepPerY = 0;
-        PointF leftBottomCorner = new PointF(0, 0);
+        GpsPoint leftBottomCorner = new GpsPoint(0, 0);
 
         private void button5_Click(object sender, EventArgs e)
         {
+            //map.Points.Clear();
             map.Latitude = Convert.ToDouble(txtCenterLat.Text);
             map.Longitude = Convert.ToDouble(txtCenterLng.Text);
             
-            relativeCenter = prj.FromLatLngToPoint(Convert.ToDouble(txtCenterLat.Text), Convert.ToDouble(txtCenterLng.Text));
+            relativeCenter = prj.FromLatLngToPoint(new GpsPoint(Convert.ToDouble(txtCenterLat.Text), Convert.ToDouble(txtCenterLng.Text)));
             var scale = Math.Pow(2, map.Zoom);
-            var pointSW = new PointF((float)(relativeCenter.X - (640.0 / 2.0) / scale), (float)(relativeCenter.Y + (640.0 / 2.0) / scale));
+            var pointSW = new PointD((relativeCenter.X - (640.0 / 2.0) / scale), (relativeCenter.Y + (640.0 / 2.0) / scale));
             AddDebug(Color.Black, pointSW);
             var latLonSW = prj.FromPointToLatLong(pointSW);
 
-            var pointNE = new PointF((float)(relativeCenter.X + (640.0 / 2) / scale), (float)(relativeCenter.Y - (640.0 / 2) / scale));
+            var pointNE = new PointD((relativeCenter.X + (640.0 / 2) / scale), (relativeCenter.Y - (640.0 / 2) / scale));
             AddDebug(Color.Red, pointNE);
             var latLonNE = prj.FromPointToLatLong(pointNE);
 
-            lblLat.Text = latLonSW.X.ToString();
-            lblLng.Text = latLonSW.Y.ToString();
+            lblLat.Text = latLonSW.Latitude.ToString();
+            lblLng.Text = latLonSW.Longitude.ToString();
 
-            var diffX = Math.Abs(latLonSW.X - latLonNE.X); // latitude
-            var diffY = Math.Abs(latLonSW.Y - latLonNE.Y); // longitude
+            var diffY = Math.Abs(latLonSW.Latitude - latLonNE.Latitude); // latitude
+            var diffX = Math.Abs(latLonSW.Longitude - latLonNE.Longitude); // longitude
             stepPerX = diffX / 640.0;
             stepPerY = diffY / 640.0;
 
             leftBottomCorner = latLonSW;
+            
+            map.Points.AddRange(new List<GpsPoint>() { latLonSW, latLonNE});
 
-            map.Points.AddRange(new List<PointF>() { latLonSW, latLonNE});
+            if(originalLines.Count > 0)
+            {
+                var order = true;
+                foreach(var line in originalLines)
+                {
+                    var p1 = new GpsPoint((leftBottomCorner.Latitude + (640 - (line.P1.Y + offsetY)) * stepPerY),
+                                          (leftBottomCorner.Longitude + ( (line.P1.X + offsetX)) * stepPerX));
+                    var p2 = new GpsPoint((leftBottomCorner.Latitude + (640 - (line.P2.Y + offsetY)) * stepPerY),
+                                          (leftBottomCorner.Longitude + ( (line.P2.X + offsetX)) * stepPerX));
+
+                    /*var longitude = (leftBottomCorner.Longitude + e.Location.X * stepPerX);
+                        var latitude = (leftBottomCorner.Latitude + (640 - e.Location.Y) * stepPerY);*/
+
+                    if (order)
+                    {
+                        map.Path.Add(p1);
+                        map.Path.Add(p2);                
+                    }
+                    else
+                    {
+                        map.Path.Add(p2);
+                        map.Path.Add(p1);
+                    }
+                    order = !order;
+                }
+            }
+
             googleImage = map.GetImage();
+            REDRAW_NEEDED = true;
             //MessageBox.Show(diffX + " : " + diffY);
         }
 
@@ -664,6 +718,13 @@ namespace DroneController
                 tPolygon.Add(new Point(point.X * change * 2, point.Y * change * 2));
             }
             translatedPolygon = tPolygon;
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            map.Points.Clear();
+            map.Path.Clear();
+            REDRAW_NEEDED = true;
         }
     }
 }

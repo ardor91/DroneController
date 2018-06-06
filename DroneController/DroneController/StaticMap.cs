@@ -19,7 +19,8 @@ namespace DroneController
         public int Zoom { get; set; }
         public Size Size { get; set; }
         public int Scale { get; set; }
-        public List<PointF> Points { get; set; }
+        public List<GpsPoint> Points { get; set; }
+        public List<GpsPoint> Path { get; set; }
 
         public StaticMap()
         {
@@ -28,16 +29,23 @@ namespace DroneController
             Zoom = 16;
             Size = new Size(640, 640);
             Scale = 2;
-            Points = new List<PointF>();
+            Points = new List<GpsPoint>();
+            Path = new List<GpsPoint>();
         }
 
         public Bitmap GetImage()
         {
             string markerks = "";
+            string path = "&path=color:0xff0000ff%7Cweight:5";
             int i = 1;
+            //path=color:0xff0000ff|weight:5|40.737102,-73.990318|40.749825,-73.987963
             foreach (var point in Points)
             {
-                markerks += "&markers=color:blue%7Clabel:" + (i++) + "%7C" + point.X + "," + point.Y;
+                markerks += "&markers=color:blue%7Clabel:" + (i++) + "%7C" + point.Latitude + "," + point.Longitude;
+            }
+            foreach(var point in Path)
+            {
+                path += "%7C" + point.Latitude + "," + point.Longitude;
             }
             string textUri = STATIC_MAP_URL +
                 "center=" + Latitude + "," + Longitude + "&" +
@@ -48,6 +56,10 @@ namespace DroneController
             if (Points.Count > 0)
             {
                 textUri += markerks;
+            }
+            if (Path.Count > 0)
+            {
+                textUri += path;
             }
 
             textUri += "&key=" + API_KEY;

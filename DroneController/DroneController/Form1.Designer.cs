@@ -68,6 +68,7 @@
             this.txtCenterLat = new System.Windows.Forms.TextBox();
             this.txtCenterLng = new System.Windows.Forms.TextBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.button6 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.nudAngle)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaterSpread)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudZoom)).BeginInit();
@@ -462,11 +463,22 @@
             this.txtCenterLng.TabIndex = 43;
             this.txtCenterLng.Text = "30,959621";
             // 
+            // button6
+            // 
+            this.button6.Location = new System.Drawing.Point(835, 314);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(146, 55);
+            this.button6.TabIndex = 44;
+            this.button6.Text = "ClearGps";
+            this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1033, 720);
+            this.Controls.Add(this.button6);
             this.Controls.Add(this.txtCenterLng);
             this.Controls.Add(this.txtCenterLat);
             this.Controls.Add(this.label11);
@@ -555,6 +567,7 @@
         private System.Windows.Forms.TextBox txtCenterLat;
         private System.Windows.Forms.TextBox txtCenterLng;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.Button button6;
     }
 }
 

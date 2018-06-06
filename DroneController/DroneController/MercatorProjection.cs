@@ -10,7 +10,7 @@ namespace DroneController
     public class MercatorProjection
     {
         private const int MERCATOR_RANGE = 256;
-        private Point PixelOrigin { get; set; }
+        private PointD PixelOrigin { get; set; }
         private double PixelsPerLonDegree { get; set; } 
         private double PixelsPerLonRadian { get; set; }
 
@@ -32,26 +32,26 @@ namespace DroneController
 
         public MercatorProjection()
         {
-            PixelOrigin = new Point(MERCATOR_RANGE / 2, MERCATOR_RANGE / 2);
+            PixelOrigin = new PointD(MERCATOR_RANGE / 2.0, MERCATOR_RANGE / 2.0);
             PixelsPerLonDegree = MERCATOR_RANGE / 360.0;
             PixelsPerLonRadian = MERCATOR_RANGE / (2 * Math.PI);
         }
 
-        public PointF FromLatLngToPoint(double latitude, double longitude)
+        public PointD FromLatLngToPoint(GpsPoint gps)
         {
-            var x = PixelOrigin.X + longitude * PixelsPerLonDegree;
-            var siny = Bound(Math.Sin(DegreesToRadians(latitude)), -0.9999, 0.9999);
+            var x = PixelOrigin.X + gps.Longitude * PixelsPerLonDegree;
+            var siny = Bound(Math.Sin(DegreesToRadians(gps.Latitude)), -0.9999, 0.9999);
             var y = PixelOrigin.Y + 0.5 * Math.Log((1 + siny) / (1 - siny)) * -PixelsPerLonRadian;
-            return new PointF((float)x, (float)y);
+            return new PointD(x, y);
         }
 
-        public PointF FromPointToLatLong(PointF optPoint)
+        public GpsPoint FromPointToLatLong(PointD optPoint)
         {
             var longitude = (optPoint.X - PixelOrigin.X) / PixelsPerLonDegree;
             var latRadians = (optPoint.Y - PixelOrigin.Y) / -PixelsPerLonRadian;
             var latitude = RadiansToDegrees(2 * Math.Atan(Math.Exp(latRadians)) - Math.PI / 2);
             
-            return new PointF((float)latitude, (float)longitude);
+            return new GpsPoint(latitude, longitude);
         }
     }
 }

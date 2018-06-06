@@ -30,3 +30,6 @@ H:\Projects\DroneController\DroneController\DroneController\obj\Debug\DroneContr
 H:\Projects\DroneController\DroneController\DroneController\bin\Debug\GMap.NET.Core.dll
 H:\Projects\DroneController\DroneController\DroneController\bin\Debug\GMap.NET.WindowsForms.dll
 H:\Projects\DroneController\DroneController\DroneController\obj\Debug\DroneController.csproj.CopyComplete
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\bin\Debug\GMap.NET.Core.dll
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\bin\Debug\GMap.NET.WindowsForms.dll
+E:\EducationProjects\MKatsuba\C#\DroneGit\DroneController\DroneController\DroneController\obj\Debug\DroneController.DoublePanel.resources
