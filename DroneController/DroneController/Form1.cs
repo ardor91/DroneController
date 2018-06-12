@@ -253,117 +253,29 @@ namespace DroneController
             }
         }
 
+         
+
         private void markupBtn_Click(object sender, EventArgs e)
         {
             try
             {
-                //showOriginal = false;
                 originalLines.Clear();
                 debug.Clear();
                 lines.Clear();
-                if (polygon.Count < 3)
-                {
-                    MessageBox.Show("Create correct polygon!");
-                    return;
-                }
 
-                double angle = Convert.ToInt32(nudAngle.Value);
+                int angle = Convert.ToInt32(nudAngle.Value);
                 lblAngle.Text = angle.ToString();
 
-                translatedPolygon.Clear();
-                foreach (var point in polygon)
-                {
-                    var translatedPoint = Func.GetTranslatedPoint(angle, point);
-                    translatedPolygon.Add(translatedPoint);
-                }
-
-                var nearestPoint = translatedPolygon[0];
-                var farestPoint = translatedPolygon[0];
-                var maxX = nearestPoint.X;
-                var minX = nearestPoint.X;
-
-                for (int i = 0; i < translatedPolygon.Count; i++)
-                {
-                    if (translatedPolygon[i].X > maxX)
-                    {
-                        farestPoint = translatedPolygon[i];
-                        maxX = translatedPolygon[i].X;
-                    }
-                    if (translatedPolygon[i].X < minX)
-                    {
-                        nearestPoint = translatedPolygon[i];
-                        minX = translatedPolygon[i].X;
-                    }
-                }
-
-                /*var tempPolygon =  new List<Point>();
-                foreach (var point in translatedPolygon)
-                {
-                    var tPoint = Func.GetTranslatedPoint(0, new Point(point.X - nearestPoint.X, point.Y - nearestPoint.Y));
-                    tempPolygon.Add(new Point((int)tPoint.X, (int)tPoint.Y));
-                }
-                translatedPolygon = tempPolygon;*/
-
                 int step = Convert.ToInt32(nudWaterSpread.Value);
-                Line topLine = null, bottomLine = null;
 
-                AddDebug(nearestPoint);
-                AddDebug(farestPoint);
+                originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon, angle, step));
+                originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon, angle + 90, step));
 
-                if (true)
+                REDRAW_NEEDED = true;
+
+                if (!drawTimer.Enabled)
                 {
-                    for (int i = nearestPoint.X + step; i < farestPoint.X; i += step)
-                    {
-                        var intersectingLines = getIntersectingLines(i);
-                        if (intersectingLines.Count % 2 != 0)
-                        {
-                            MessageBox.Show("Something went wrong. Bad shape!");
-                        }
-                        List<int> ys = new List<int>();
-                        for (int k = 1; k < intersectingLines.Count; k += 2)
-                        {
-
-                            topLine = intersectingLines[k - 1];
-                            bottomLine = intersectingLines[k];
-
-                            //get next vertical line
-                            var nY1L = Math.Abs(topLine.P2.Y) > Math.Abs(topLine.P1.Y) ? topLine.P1.Y : topLine.P2.Y;//Math.Abs(topLine.P1.Y - topLine.P2.Y);                    
-                            var nY1G = Math.Abs(topLine.P2.Y) > Math.Abs(topLine.P1.Y) ? topLine.P2.Y : topLine.P1.Y;
-                            nY1G -= nY1L;
-
-                            var pY1L = Math.Abs(bottomLine.P2.Y) > Math.Abs(bottomLine.P1.Y) ? bottomLine.P1.Y : bottomLine.P2.Y;
-                            var pY1G = Math.Abs(bottomLine.P2.Y) > Math.Abs(bottomLine.P1.Y) ? bottomLine.P2.Y : bottomLine.P1.Y;
-                            pY1G -= pY1L;
-
-                            var nC = Math.Abs(topLine.P2.Y) > Math.Abs(topLine.P1.Y) ? Math.Abs(i - topLine.P1.X) : Math.Abs(i - topLine.P2.X);
-                            var pC = Math.Abs(bottomLine.P2.Y) > Math.Abs(bottomLine.P1.Y) ? Math.Abs(i - bottomLine.P1.X) : Math.Abs(i - bottomLine.P2.X);
-                            var y1 = ((nY1G * nC) / (topLine.P2.X - topLine.P1.X)) + nY1L;
-                            var y2 = ((pY1G * pC) / (bottomLine.P2.X - bottomLine.P1.X)) + pY1L;//prevNearestPoint.X;
-                            ys.Add(y1);
-                            ys.Add(y2);
-                        }
-                        ys.Sort();
-                        for (int l = 1; l < ys.Count; l += 2)
-                        {
-                            lines.Add(new Line(i, ys[l - 1], i, ys[l]));
-                        }
-                    }
-
-                    foreach(var line in lines)
-                    {
-                        originalLines.Add(Func.GetTranslatedLine(-angle, line));
-                    }
-
-                    /*foreach(var line in originalLines)
-                    {
-                        
-                    }*/
-                    REDRAW_NEEDED = true;
-                    if (!drawTimer.Enabled)
-                    {
-                        drawTimer_Tick(sender, e);
-                    }
-                    //REDRAW_NEEDED = true;
+                    drawTimer_Tick(sender, e);
                 }
             }
             catch(Exception ex)
@@ -372,124 +284,7 @@ namespace DroneController
             }
         }
 
-        public List<Line> getIntersectingLines(int x)
-        {
-            List<Line> lines = new List<Line>();
-            Point prevPoint = translatedPolygon[0];
-            bool prevSamePointAdded = false;
-            for(int i = 1; i<translatedPolygon.Count; i++)
-            {
-                if(prevPoint.X <= x && translatedPolygon[i].X >= x ||
-                    (prevPoint.X >= x && translatedPolygon[i].X <= x))
-                {
-                    if (!isPointAlreadyAdded(lines, translatedPolygon[i].X, x) && !isPointAlreadyAdded(lines, prevPoint.X, x))
-                    {
-                        if (prevPoint.X < translatedPolygon[i].X)
-                            lines.Add(new Line(prevPoint, translatedPolygon[i]));
-                        else
-                            lines.Add(new Line(translatedPolygon[i], prevPoint));
-                    }
-                }
-                prevPoint = translatedPolygon[i];
-            }
-            if ((prevPoint.X <= x && translatedPolygon[0].X >= x) ||
-                    (prevPoint.X >= x && translatedPolygon[0].X <= x))
-            {
-                if (!isPointAlreadyAdded(lines, translatedPolygon[0].X, x) && !isPointAlreadyAdded(lines, prevPoint.X, x))
-                {
-                    if (prevPoint.X < translatedPolygon[0].X)
-                        lines.Add(new Line(prevPoint, translatedPolygon[0]));
-                    else
-                        lines.Add(new Line(translatedPolygon[0], prevPoint));
-                }
-            }
-            Line l1 = null, l2 = null;
-            List<Line> toRemove = new List<Line>();
-            int next = 0;
-            foreach(var line in lines)
-            {
-                if(line.P1.X == x || line.P2.X == x)
-                {
-                    if(next == 0)
-                    {
-                        l1 = line;
-                        next = 1;
-                    }
-                    else
-                    {
-                        l2 = line;
-                        next = 0;
-                        if(isEqualPoint(l1.P1, l2.P2))
-                        {
-                            if ((l1.P2.X < x && l2.P1.X > x) || (l1.P2.X > x && l2.P1.X < x))
-                                toRemove.Add(l2);
-                        }
-                        else
-                        {
-                            if ((l1.P1.X < x && l2.P2.X > x) || (l1.P1.X > x && l2.P2.X < x))
-                                toRemove.Add(l2);
-                        }
-                    }
-                }
-
-            }
-            foreach(var line in lines)
-            {
-                if (line.P1.X == line.P2.X)
-                    toRemove.Add(line);
-            }
-            foreach (var line in lines)
-            {
-                if (line.P1.X == x || line.P2.X == x)
-                {
-                    if (next == 0)
-                    {
-                        l1 = line;
-                        next = 1;
-                    }
-                    else
-                    {
-                        l2 = line;
-                        next = 0;
-                        if (isEqualPoint(l1.P1, l2.P2))
-                        {
-                            if ((l1.P2.X < x && l2.P1.X > x) || (l1.P2.X > x && l2.P1.X < x))
-                                toRemove.Add(l2);
-                        }
-                        else
-                        {
-                            if ((l1.P1.X < x && l2.P2.X > x) || (l1.P1.X > x && l2.P2.X < x))
-                                toRemove.Add(l2);
-                        }
-                    }
-                }
-
-            }
-            if (toRemove.Count > 0)
-            {
-                foreach(var r in toRemove)
-                {
-                    lines.Remove(r);
-                }
-            }
-            return lines;
-        }
-
-        public bool isEqualPoint(Point p1, Point p2)
-        {
-            return p1.X == p2.X;
-        }
-
-        public bool isPointAlreadyAdded(List<Line> lines, int x, int step)
-        {
-            foreach(var line in lines)
-            {
-                if ((line.P1.X == x || line.P2.X == x) && (line.P1.X == step || line.P2.X == step))
-                    return false;
-            }
-            return false;
-        }
-
+        #region Debug
         public void AddDebug(params Point[] p)
         {
             var d = new Debug(p.Length == 1 ? ObjectType.POINT : p.Length == 2 ? ObjectType.LINE : ObjectType.RECTANGLE);
@@ -525,6 +320,8 @@ namespace DroneController
                 d.AddPoint(new Point((int) pp.X, (int) pp.Y));
             debug.Add(d);
         }
+
+        #endregion
 
         private void markupBtn_Click_1(object sender, EventArgs e)
         {
@@ -725,6 +522,36 @@ namespace DroneController
             map.Points.Clear();
             map.Path.Clear();
             REDRAW_NEEDED = true;
+        }
+
+        private void splitToPolygons_Click(object sender, EventArgs e)
+        {
+            int step = 50;
+            int angle = 0;
+
+            List<Line> horizontallines = Func.GetPathLinesFromPolygon(polygon, angle, step, false);
+            List<Line> verticallines = Func.GetPathLinesFromPolygon(polygon, angle + 90, step, false);
+            List<Point> translatedPolygon = new List<Point>();
+            foreach (var point in polygon)
+            {
+                var translatedPoint = Func.GetTranslatedPoint(angle, point);
+                translatedPolygon.Add(translatedPoint);
+            }
+
+            var mode = true;
+            if (horizontallines[0].P1.Y == horizontallines[0].P2.Y)
+                mode = false;
+            else
+                mode = true;
+
+            foreach (var hline in mode ? horizontallines : verticallines)
+            {
+                foreach(var vline in mode ? verticallines : horizontallines)
+                {
+                    
+
+                }
+            }
         }
     }
 }

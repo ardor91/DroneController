@@ -161,5 +161,206 @@ namespace DroneController
             return square;
             //lblSquare.Text = square.ToString();
         }
+
+        public List<Line> GetPathLinesFromPolygon(List<Point> polygon, int angle, int step, bool translateBack = true)
+        {
+            List<Line> lines = new List<Line>();
+            List<Line> result = new List<Line>();
+            List<Point> translatedPolygon = new List<Point>();
+            if (polygon.Count < 3)
+            {
+                return null;
+            }
+
+            foreach (var point in polygon)
+            {
+                var translatedPoint = GetTranslatedPoint(angle, point);
+                translatedPolygon.Add(translatedPoint);
+            }
+
+            var nearestPoint = translatedPolygon[0];
+            var farestPoint = translatedPolygon[0];
+            var maxX = nearestPoint.X;
+            var minX = nearestPoint.X;
+
+            for (int i = 0; i < translatedPolygon.Count; i++)
+            {
+                if (translatedPolygon[i].X > maxX)
+                {
+                    farestPoint = translatedPolygon[i];
+                    maxX = translatedPolygon[i].X;
+                }
+                if (translatedPolygon[i].X < minX)
+                {
+                    nearestPoint = translatedPolygon[i];
+                    minX = translatedPolygon[i].X;
+                }
+            }
+
+            Line topLine = null, bottomLine = null;
+
+            for (int i = nearestPoint.X + step; i < farestPoint.X; i += step)
+            {
+                var intersectingLines = getIntersectingLines(translatedPolygon, i);
+                if (intersectingLines.Count % 2 != 0)
+                {
+                    //MessageBox.Show("Something went wrong. Bad shape!");
+                }
+                List<int> ys = new List<int>();
+                for (int k = 1; k < intersectingLines.Count; k += 2)
+                {
+
+                    topLine = intersectingLines[k - 1];
+                    bottomLine = intersectingLines[k];
+
+                    //get next vertical line
+                    var nY1L = Math.Abs(topLine.P2.Y) > Math.Abs(topLine.P1.Y) ? topLine.P1.Y : topLine.P2.Y;//Math.Abs(topLine.P1.Y - topLine.P2.Y);                    
+                    var nY1G = Math.Abs(topLine.P2.Y) > Math.Abs(topLine.P1.Y) ? topLine.P2.Y : topLine.P1.Y;
+                    nY1G -= nY1L;
+
+                    var pY1L = Math.Abs(bottomLine.P2.Y) > Math.Abs(bottomLine.P1.Y) ? bottomLine.P1.Y : bottomLine.P2.Y;
+                    var pY1G = Math.Abs(bottomLine.P2.Y) > Math.Abs(bottomLine.P1.Y) ? bottomLine.P2.Y : bottomLine.P1.Y;
+                    pY1G -= pY1L;
+
+                    var nC = Math.Abs(topLine.P2.Y) > Math.Abs(topLine.P1.Y) ? Math.Abs(i - topLine.P1.X) : Math.Abs(i - topLine.P2.X);
+                    var pC = Math.Abs(bottomLine.P2.Y) > Math.Abs(bottomLine.P1.Y) ? Math.Abs(i - bottomLine.P1.X) : Math.Abs(i - bottomLine.P2.X);
+                    var y1 = ((nY1G * nC) / (topLine.P2.X - topLine.P1.X)) + nY1L;
+                    var y2 = ((pY1G * pC) / (bottomLine.P2.X - bottomLine.P1.X)) + pY1L;//prevNearestPoint.X;
+                    ys.Add(y1);
+                    ys.Add(y2);
+                }
+                ys.Sort();
+                for (int l = 1; l < ys.Count; l += 2)
+                {
+                    lines.Add(new Line(i, ys[l - 1], i, ys[l]));
+                }
+            }
+            if (translateBack)
+            {
+                foreach (var line in lines)
+                {
+                    result.Add(GetTranslatedLine(-angle, line));
+                }
+                return result;
+            }
+            return lines;
+        }
+
+        public List<Line> getIntersectingLines(List<Point> polygon, int x)
+        {
+            List<Line> lines = new List<Line>();
+            Point prevPoint = polygon[0];
+            for (int i = 1; i < polygon.Count; i++)
+            {
+                if (prevPoint.X <= x && polygon[i].X >= x ||
+                    (prevPoint.X >= x && polygon[i].X <= x))
+                {
+                    if (!isPointAlreadyAdded(lines, polygon[i].X, x) && !isPointAlreadyAdded(lines, prevPoint.X, x))
+                    {
+                        if (prevPoint.X < polygon[i].X)
+                            lines.Add(new Line(prevPoint, polygon[i]));
+                        else
+                            lines.Add(new Line(polygon[i], prevPoint));
+                    }
+                }
+                prevPoint = polygon[i];
+            }
+            if ((prevPoint.X <= x && polygon[0].X >= x) ||
+                    (prevPoint.X >= x && polygon[0].X <= x))
+            {
+                if (!isPointAlreadyAdded(lines, polygon[0].X, x) && !isPointAlreadyAdded(lines, prevPoint.X, x))
+                {
+                    if (prevPoint.X < polygon[0].X)
+                        lines.Add(new Line(prevPoint, polygon[0]));
+                    else
+                        lines.Add(new Line(polygon[0], prevPoint));
+                }
+            }
+            Line l1 = null, l2 = null;
+            List<Line> toRemove = new List<Line>();
+            int next = 0;
+            foreach (var line in lines)
+            {
+                if (line.P1.X == x || line.P2.X == x)
+                {
+                    if (next == 0)
+                    {
+                        l1 = line;
+                        next = 1;
+                    }
+                    else
+                    {
+                        l2 = line;
+                        next = 0;
+                        if (isEqualPoint(l1.P1, l2.P2))
+                        {
+                            if ((l1.P2.X < x && l2.P1.X > x) || (l1.P2.X > x && l2.P1.X < x))
+                                toRemove.Add(l2);
+                        }
+                        else
+                        {
+                            if ((l1.P1.X < x && l2.P2.X > x) || (l1.P1.X > x && l2.P2.X < x))
+                                toRemove.Add(l2);
+                        }
+                    }
+                }
+
+            }
+            foreach (var line in lines)
+            {
+                if (line.P1.X == line.P2.X)
+                    toRemove.Add(line);
+            }
+            foreach (var line in lines)
+            {
+                if (line.P1.X == x || line.P2.X == x)
+                {
+                    if (next == 0)
+                    {
+                        l1 = line;
+                        next = 1;
+                    }
+                    else
+                    {
+                        l2 = line;
+                        next = 0;
+                        if (isEqualPoint(l1.P1, l2.P2))
+                        {
+                            if ((l1.P2.X < x && l2.P1.X > x) || (l1.P2.X > x && l2.P1.X < x))
+                                toRemove.Add(l2);
+                        }
+                        else
+                        {
+                            if ((l1.P1.X < x && l2.P2.X > x) || (l1.P1.X > x && l2.P2.X < x))
+                                toRemove.Add(l2);
+                        }
+                    }
+                }
+
+            }
+            if (toRemove.Count > 0)
+            {
+                foreach (var r in toRemove)
+                {
+                    lines.Remove(r);
+                }
+            }
+            return lines;
+        }
+
+        public bool isEqualPoint(Point p1, Point p2)
+        {
+            return p1.X == p2.X;
+        }
+
+        public bool isPointAlreadyAdded(List<Line> lines, int x, int step)
+        {
+            foreach (var line in lines)
+            {
+                if ((line.P1.X == x || line.P2.X == x) && (line.P1.X == step || line.P2.X == step))
+                    return false;
+            }
+            return false;
+        }
     }
 }

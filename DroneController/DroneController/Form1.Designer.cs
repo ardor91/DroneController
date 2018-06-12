@@ -69,6 +69,7 @@
             this.txtCenterLng = new System.Windows.Forms.TextBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.button6 = new System.Windows.Forms.Button();
+            this.splitToPolygons = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.nudAngle)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaterSpread)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudZoom)).BeginInit();
@@ -473,11 +474,22 @@
             this.button6.UseVisualStyleBackColor = true;
             this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
+            // splitToPolygons
+            // 
+            this.splitToPolygons.Location = new System.Drawing.Point(835, 192);
+            this.splitToPolygons.Name = "splitToPolygons";
+            this.splitToPolygons.Size = new System.Drawing.Size(146, 55);
+            this.splitToPolygons.TabIndex = 45;
+            this.splitToPolygons.Text = "Split Polygon";
+            this.splitToPolygons.UseVisualStyleBackColor = true;
+            this.splitToPolygons.Click += new System.EventHandler(this.splitToPolygons_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1033, 720);
+            this.Controls.Add(this.splitToPolygons);
             this.Controls.Add(this.button6);
             this.Controls.Add(this.txtCenterLng);
             this.Controls.Add(this.txtCenterLat);
@@ -568,6 +580,7 @@
         private System.Windows.Forms.TextBox txtCenterLng;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.Button button6;
+        private System.Windows.Forms.Button splitToPolygons;
     }
 }
 
