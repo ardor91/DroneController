@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DroneController.Helpers;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,6 +14,7 @@ namespace DroneController
     public partial class Form1 : Form
     {
         public List<Point> polygon;
+        public List<Polygon> polygons;
         public List<Point> translatedPolygon;
         public Point startPoint;
         public bool isDrawing = false;
@@ -49,6 +51,7 @@ namespace DroneController
             triangles = new List<Triangle>();
             lines = new List<Line>();
             originalLines = new List<Line>();
+            polygons = new List<Polygon>();
 
             offsetX = panel1.Width / 4;
             offsetY = panel1.Height / 2;
@@ -171,6 +174,12 @@ namespace DroneController
             foreach (var lni in originalLines)
             {
                 lni.DrawObject(drawArea, oriPen);
+            }
+
+            //draw polygons
+            foreach (var poly in polygons)
+            {
+                poly.Draw(drawArea, Color.Red, 3);
             }
             REDRAW_NEEDED = false;
         }
@@ -331,10 +340,10 @@ namespace DroneController
         private void button1_Click(object sender, EventArgs e)
         {
             polygon.Clear();
-            polygon.Add(new Point(0, 0));
-            polygon.Add(new Point(132, 132));
-            polygon.Add(new Point(204, 302));
-            polygon.Add(new Point(50, 209));
+            polygon.Add(new Point(70, -8));
+            polygon.Add(new Point(147, -96));
+            polygon.Add(new Point(224, 4));
+            polygon.Add(new Point(134, 73));
             startPoint = new Point(-40, 10);
         }
 
@@ -526,11 +535,14 @@ namespace DroneController
 
         private void splitToPolygons_Click(object sender, EventArgs e)
         {
-            int step = 50;
+            polygons.Clear();
+            int step = Convert.ToInt32(nudWaterSpread.Value);
             int angle = 0;
-
+            //List<Polygon> polygons = new List<Polygon>();
             List<Line> horizontallines = Func.GetPathLinesFromPolygon(polygon, angle, step, false);
             List<Line> verticallines = Func.GetPathLinesFromPolygon(polygon, angle + 90, step, false);
+            horizontallines.Reverse();
+            verticallines.Reverse();
             List<Point> translatedPolygon = new List<Point>();
             foreach (var point in polygon)
             {
@@ -539,19 +551,180 @@ namespace DroneController
             }
 
             var mode = true;
-            if (horizontallines[0].P1.Y == horizontallines[0].P2.Y)
-                mode = false;
-            else
-                mode = true;
+            if (horizontallines.Count > 0)
+            {
+                if (horizontallines[0].P1.Y == horizontallines[0].P2.Y)
+                    mode = false;
+                else
+                    mode = true;
+            }
+            Line prevHLine = null, prevVLine = null;
 
             foreach (var hline in mode ? horizontallines : verticallines)
             {
-                foreach(var vline in mode ? verticallines : horizontallines)
+                foreach (var vline in mode ? verticallines : horizontallines)
                 {
-                    
+                    var tVline = Func.GetTranslatedLine(-90, vline);
+                    if (prevHLine == null)
+                    {
+                        //if (vline.P1.X >= hline.P1.X && vline.P2.X >= hline.P1.X) continue;
+                        if(prevVLine == null)
+                        {
+                            var intersection = new PointD(0, 0);
+                            var firstPointIndex = -1;
+                            var lastPointIndex = -1;
+                            if(Function.LineSegmentsIntersect(hline, tVline, out intersection))
+                            {
+                                var prevPoint = translatedPolygon[0];
+                                var pIntH = new PointD(0, 0);
+                                var pIntV = new PointD(0, 0);
+                                var intersectingH = new PointD(0, 0);
+                                var intersectingV = new PointD(0, 0);
+                                for (int i = 1; i < translatedPolygon.Count; i++)
+                                {
+                                    if(Function.LineSegmentsIntersect(new Line(prevPoint, translatedPolygon[i]), hline, out pIntH))
+                                    {
+                                        if(pIntH.Y < intersection.Y)
+                                        {
+                                            firstPointIndex = i - 1;
+                                            intersectingH = pIntH;
+                                        }
+                                    }
+                                    if (Function.LineSegmentsIntersect(new Line(prevPoint, translatedPolygon[i]), tVline, out pIntV))
+                                    {
+                                        if (pIntV.X < intersection.X)
+                                        {
+                                            lastPointIndex = i - 1;
+                                            intersectingV = pIntV;
+                                        }
+                                    }
+                                    prevPoint = translatedPolygon[i];
+                                }
 
+                                if(firstPointIndex != -1 && lastPointIndex != -1)
+                                {
+                                    if(firstPointIndex == lastPointIndex)
+                                    {
+                                        polygons.Add(new Polygon(intersection.ToPoint(), pIntH.ToPoint(), pIntV.ToPoint()));
+                                    }
+                                    else
+                                    {
+                                        var points = new List<Point>();
+                                        int start = firstPointIndex > lastPointIndex ? lastPointIndex : firstPointIndex;
+                                        int end = firstPointIndex < lastPointIndex ? lastPointIndex : firstPointIndex;
+                                        for (int i = start; i < end; i++)
+                                        {
+                                            points.Add(translatedPolygon[i + 1]);
+                                        }
+                                        polygons.Add(new Polygon(points, intersectingH.ToPoint(), intersection.ToPoint(), intersectingV.ToPoint()));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                var polygon = new Polygon();
+                                var prevPoint = translatedPolygon[0];
+                                var pIntH = new PointD(0, 0);
+                                var start = -1;
+                                var end = -1;
+                                for (int i = 1; i < translatedPolygon.Count; i++)
+                                {
+                                    if (Function.LineSegmentsIntersect(new Line(prevPoint, translatedPolygon[i]), tVline, out pIntH))
+                                    {
+                                        polygon.Points.Add(pIntH.ToPoint());
+                                        if (start == -1)
+                                            start = i - 1;
+                                        else
+                                            end = i - 1;
+                                    }
+                                    prevPoint = translatedPolygon[i];
+                                }
+                                var points = new List<Point>();
+                                int startInd = start > end ? end : start;
+                                int endInd = start < end ? end : start;
+                                bool flag = false;
+                                for (int i = startInd; i < endInd; i++)
+                                {
+                                    if (i + 1 >= translatedPolygon.Count)
+                                    {
+                                        i = -1;
+                                    }
+                                    if(translatedPolygon[i+1].Y > tVline.P1.Y)
+                                    {
+                                        flag = true;
+                                        break;
+                                    }
+                                    points.Add(translatedPolygon[i + 1]);
+                                }
+                                if(flag)
+                                {
+                                    for (int i = startInd; i >= endInd; i--)
+                                    {
+                                        if (i - 1 < 0)
+                                        {
+                                            i = translatedPolygon.Count;
+                                        }
+                                        if (translatedPolygon[i - 1].Y > tVline.P1.Y)
+                                        {
+                                            flag = true;
+                                            break;
+                                        }
+                                        points.Add(translatedPolygon[i - 1]);
+                                        
+                                    }
+                                }
+                                polygon.Points.AddRange(points);
+                                polygons.Add(polygon);
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            //there is a prev V line
+                            var li = prevVLine;
+                        }
+
+                    }
+                    else
+                    {
+                        //there is a prev H line
+                    }
+                    prevVLine = tVline;
+                    
                 }
+                prevHLine = hline;
+                prevVLine = null;
             }
+
+            //case where there are no vertical lines
+
+            //TODO
+
+
+            //case where there are no horizontal lines
+
+            //TODO
+
+            REDRAW_NEEDED = true;
+            return;
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            var text = textBox1.Text;
+            string[] numbers = text.Split(',');
+            List<int> nbr = new List<int>();
+            foreach (var n in numbers)
+                nbr.Add(Convert.ToInt32(n));
+            if (nbr.Count != 8) return;
+            Vector intersection = new Vector();
+            if (Function.LineSegmentsIntersect(new Vector(nbr[0], nbr[1]), new Vector(nbr[2], nbr[3]), new Vector(nbr[4], nbr[5]), new Vector(nbr[6], nbr[7]), out intersection))
+            {
+                MessageBox.Show("Intersects!");
+                textBox2.Text = "X: " + intersection.X + "; Y: " + intersection.Y;
+            }
+            else
+                MessageBox.Show("No intersection =(");
         }
     }
 }

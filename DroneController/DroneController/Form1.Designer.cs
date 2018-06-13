@@ -70,6 +70,9 @@
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.button6 = new System.Windows.Forms.Button();
             this.splitToPolygons = new System.Windows.Forms.Button();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.button7 = new System.Windows.Forms.Button();
+            this.textBox2 = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.nudAngle)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaterSpread)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudZoom)).BeginInit();
@@ -484,11 +487,39 @@
             this.splitToPolygons.UseVisualStyleBackColor = true;
             this.splitToPolygons.Click += new System.EventHandler(this.splitToPolygons_Click);
             // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(848, 453);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(144, 20);
+            this.textBox1.TabIndex = 46;
+            this.textBox1.Text = "0,1,2,3";
+            // 
+            // button7
+            // 
+            this.button7.Location = new System.Drawing.Point(933, 490);
+            this.button7.Name = "button7";
+            this.button7.Size = new System.Drawing.Size(75, 48);
+            this.button7.TabIndex = 47;
+            this.button7.Text = "test intersection";
+            this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.button7_Click);
+            // 
+            // textBox2
+            // 
+            this.textBox2.Location = new System.Drawing.Point(862, 544);
+            this.textBox2.Name = "textBox2";
+            this.textBox2.Size = new System.Drawing.Size(100, 20);
+            this.textBox2.TabIndex = 48;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1033, 720);
+            this.Controls.Add(this.textBox2);
+            this.Controls.Add(this.button7);
+            this.Controls.Add(this.textBox1);
             this.Controls.Add(this.splitToPolygons);
             this.Controls.Add(this.button6);
             this.Controls.Add(this.txtCenterLng);
@@ -581,6 +612,9 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.Button button6;
         private System.Windows.Forms.Button splitToPolygons;
+        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Button button7;
+        private System.Windows.Forms.TextBox textBox2;
     }
 }
 

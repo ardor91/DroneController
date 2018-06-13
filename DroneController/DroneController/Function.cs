@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DroneController.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -360,6 +361,89 @@ namespace DroneController
                 if ((line.P1.X == x || line.P2.X == x) && (line.P1.X == step || line.P2.X == step))
                     return false;
             }
+            return false;
+        }
+
+        public bool getIntersectionPoint(Line l1, Line l2, out PointD intersection)
+        {
+            intersection = new PointD(0, 0);
+            double dx1 = l1.P2.X - l1.P1.X;
+            double dy1 = l1.P2.Y - l1.P1.Y;
+            double dx2 = l2.P2.X - l2.P1.X;
+            double dy2 = l2.P2.Y - l2.P1.Y;
+            intersection.X = dy1 * dx2 - dy2 * dx1;
+            /*if (!x || !dx2)
+                return Point.Empty;*/
+
+            intersection.Y = l2.P1.X * l2.P2.Y - l2.P1.Y * l2.P2.X;
+            intersection.X = ((l1.P1.X * l1.P2.Y - l1.P1.Y * l1.P2.X) * dx2 - intersection.Y * dx1) / intersection.X;
+            intersection.Y = (dy2 * intersection.X - intersection.Y) / dx2;
+
+            return (((l1.P1.X <= intersection.X && l1.P2.X >= intersection.X) ||
+                 (l1.P2.X <= intersection.X && l1.P1.X >= intersection.X)) &&
+                ((l2.P1.X <= intersection.X && l2.P2.X >= intersection.X) ||
+                 (l2.P2.X <= intersection.X && l2.P1.X >= intersection.X)));
+        }
+
+        public static bool LineSegmentsIntersect(Line l1, Line l2, out PointD intersection)
+        {
+            intersection = new PointD(double.NaN, double.NaN);
+            Vector v = new Vector();
+
+            var res = LineSegmentsIntersect(new Vector(l1.P1.X, l1.P1.Y), new Vector(l1.P2.X, l1.P2.Y),
+                new Vector(l2.P1.X, l2.P1.Y), new Vector(l2.P2.X, l2.P2.Y), out v);
+            intersection = new PointD(v.X, v.Y);
+            return res;
+        }
+
+        public static bool LineSegmentsIntersect(Vector p, Vector p2, Vector q, Vector q2,
+                            out Vector intersection, bool considerCollinearOverlapAsIntersect = false)
+        {
+            intersection = new Vector();
+
+            var r = p2 - p;
+            var s = q2 - q;
+            var rxs = r.Cross(s);
+            var qpxr = (q - p).Cross(r);
+
+            // If r x s = 0 and (q - p) x r = 0, then the two lines are collinear.
+            if (rxs.IsZero() && qpxr.IsZero())
+            {
+                // 1. If either  0 <= (q - p) * r <= r * r or 0 <= (p - q) * s <= * s
+                // then the two lines are overlapping,
+                if (considerCollinearOverlapAsIntersect)
+                    if ((0 <= (q - p) * r && (q - p) * r <= r * r) || (0 <= (p - q) * s && (p - q) * s <= s * s))
+                        return true;
+
+                // 2. If neither 0 <= (q - p) * r = r * r nor 0 <= (p - q) * s <= s * s
+                // then the two lines are collinear but disjoint.
+                // No need to implement this expression, as it follows from the expression above.
+                return false;
+            }
+
+            // 3. If r x s = 0 and (q - p) x r != 0, then the two lines are parallel and non-intersecting.
+            if (rxs.IsZero() && !qpxr.IsZero())
+                return false;
+
+            // t = (q - p) x s / (r x s)
+            var t = (q - p).Cross(s) / rxs;
+
+            // u = (q - p) x r / (r x s)
+
+            var u = (q - p).Cross(r) / rxs;
+
+            // 4. If r x s != 0 and 0 <= t <= 1 and 0 <= u <= 1
+            // the two line segments meet at the point p + t r = q + u s.
+            if (!rxs.IsZero() && (-0.02 <= t && t <= 1.02) && (-0.02 <= u && u <= 1.02))
+            {
+                // We can calculate the intersection point using either t or u.
+                intersection = p + t * r;
+
+                // An intersection was found.
+                return true;
+            }
+
+            // 5. Otherwise, the two line segments are not parallel but do not intersect.
             return false;
         }
     }
