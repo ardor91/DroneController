@@ -76,6 +76,8 @@
             this.nudRad = new System.Windows.Forms.NumericUpDown();
             this.label14 = new System.Windows.Forms.Label();
             this.button8 = new System.Windows.Forms.Button();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.nudAngle)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaterSpread)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudZoom)).BeginInit();
@@ -562,11 +564,31 @@
             this.button8.UseVisualStyleBackColor = true;
             this.button8.Click += new System.EventHandler(this.button8_Click);
             // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(1066, 192);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(34, 13);
+            this.label15.TabIndex = 52;
+            this.label15.Text = "Angle";
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(1066, 234);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(34, 13);
+            this.label16.TabIndex = 53;
+            this.label16.Text = "Angle";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1262, 720);
+            this.Controls.Add(this.label16);
+            this.Controls.Add(this.label15);
             this.Controls.Add(this.button8);
             this.Controls.Add(this.nudRad);
             this.Controls.Add(this.label14);
@@ -672,6 +694,8 @@
         private System.Windows.Forms.NumericUpDown nudRad;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Button button8;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label label16;
     }
 }
 

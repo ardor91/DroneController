@@ -254,16 +254,13 @@ namespace DroneController
             }
             if (isSectorDrawing)
             {
-                if (!isWrongPosition)
+                if (e.Button == MouseButtons.Left && !isWrongPosition)
+                    currentSector.Points.Add(new Point(e.Location.X - offsetX, e.Location.Y - offsetY));
+                if (e.Button == MouseButtons.Right)
                 {
-                    if (e.Button == MouseButtons.Left)
-                        currentSector.Points.Add(new Point(e.Location.X - offsetX, e.Location.Y - offsetY));
-                    if (e.Button == MouseButtons.Right)
-                    {
-                        isSectorDrawing = false;
-                        sectors.Add(currentSector);
-                        currentSector = null;
-                    }
+                    isSectorDrawing = false;
+                    sectors.Add(currentSector);
+                    currentSector = null;
                 }
             }
             if (isPickingStart)
@@ -299,12 +296,17 @@ namespace DroneController
             // y - longitude
             lblLat.Text = (leftBottomCorner.Latitude + (640 - e.Location.Y) * stepPerY).ToString();
             lblLng.Text = (leftBottomCorner.Longitude + (e.Location.X) * stepPerX).ToString();
-
-            if(isSectorDrawing)
+            label16.Text = "IS In Polygon: " + IsInPolygon3(polygon.ToArray(), currentMousePosition);
+            if (isSectorDrawing)
             {
+                label15.Text = startPoint.X + ";" + startPoint.Y + "------" + currentMousePosition.X + ";" + currentMousePosition.Y;
                 isWrongPosition = false;
                 //(x - center_x)^2 + (y - center_y)^2 <= radius^2
-                if(Math.Pow((currentMousePosition.X - startPoint.X), 2) + Math.Pow((currentMousePosition.Y - startPoint.Y), 2) > Math.Pow(Convert.ToInt32(nudRad.Value), 2))
+                if(Math.Pow((currentMousePosition.X - startPoint.X), 2) + Math.Pow((currentMousePosition.Y - startPoint.Y), 2) > Math.Pow(Convert.ToInt32(nudRad.Value) / 2, 2))
+                {
+                    isWrongPosition = true;                    
+                }
+                if (!IsInPolygon3(polygon.ToArray(), currentMousePosition))
                 {
                     isWrongPosition = true;
                 }
@@ -324,6 +326,56 @@ namespace DroneController
             {
                 isPickingStart = true;
             }
+        }
+
+        public static bool IsInPolygon(Point[] poly, Point point)
+        {
+            var coef = poly.Skip(1).Select((p, i) =>
+                                            (point.Y - poly[i].Y) * (p.X - poly[i].X)
+                                          - (point.X - poly[i].X) * (p.Y - poly[i].Y))
+                                    .ToList();
+
+            if (coef.Any(p => p == 0))
+                return true;
+
+            for (int i = 1; i < coef.Count(); i++)
+            {
+                if (coef[i] * coef[i - 1] < 0)
+                    return false;
+            }
+            return true;
+        }
+
+        public static bool IsInPolygon2(Point[] polygon, Point testPoint)
+        {
+            bool result = false;
+            int j = polygon.Count() - 1;
+            for (int i = 0; i < polygon.Count(); i++)
+            {
+                if (polygon[i].Y < testPoint.Y && polygon[j].Y >= testPoint.Y || polygon[j].Y < testPoint.Y && polygon[i].Y >= testPoint.Y)
+                {
+                    if (polygon[i].X + (testPoint.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) * (polygon[j].X - polygon[i].X) < testPoint.X)
+                    {
+                        result = !result;
+                    }
+                }
+                j = i;
+            }
+            return result;
+        }
+
+        private bool IsInPolygon3(Point[] polygon, Point point)
+        {
+            bool isInside = false;
+            for (int i = 0, j = polygon.Length - 1; i < polygon.Length; j = i++)
+            {
+                if (((polygon[i].Y > point.Y) != (polygon[j].Y > point.Y)) &&
+                (point.X < (polygon[j].X - polygon[i].X) * (point.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) + polygon[i].X))
+                {
+                    isInside = !isInside;
+                }
+            }
+            return isInside;
         }
 
 
@@ -807,6 +859,7 @@ namespace DroneController
             else
             {
                 isSectorDrawing = true;
+                currentSector = new Polygon();
             }
         }
     }
