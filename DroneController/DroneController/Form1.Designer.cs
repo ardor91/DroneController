@@ -73,9 +73,13 @@
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.button7 = new System.Windows.Forms.Button();
             this.textBox2 = new System.Windows.Forms.TextBox();
+            this.nudRad = new System.Windows.Forms.NumericUpDown();
+            this.label14 = new System.Windows.Forms.Label();
+            this.button8 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.nudAngle)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaterSpread)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudZoom)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRad)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -512,11 +516,60 @@
             this.textBox2.Size = new System.Drawing.Size(100, 20);
             this.textBox2.TabIndex = 48;
             // 
+            // nudRad
+            // 
+            this.nudRad.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.nudRad.Location = new System.Drawing.Point(793, 34);
+            this.nudRad.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.nudRad.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.nudRad.Name = "nudRad";
+            this.nudRad.Size = new System.Drawing.Size(42, 20);
+            this.nudRad.TabIndex = 50;
+            this.nudRad.Value = new decimal(new int[] {
+            20,
+            0,
+            0,
+            0});
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(753, 36);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(40, 13);
+            this.label14.TabIndex = 49;
+            this.label14.Text = "Radius";
+            // 
+            // button8
+            // 
+            this.button8.Location = new System.Drawing.Point(1053, 70);
+            this.button8.Name = "button8";
+            this.button8.Size = new System.Drawing.Size(146, 55);
+            this.button8.TabIndex = 51;
+            this.button8.Text = "Draw Sector";
+            this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.button8_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1033, 720);
+            this.ClientSize = new System.Drawing.Size(1262, 720);
+            this.Controls.Add(this.button8);
+            this.Controls.Add(this.nudRad);
+            this.Controls.Add(this.label14);
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.button7);
             this.Controls.Add(this.textBox1);
@@ -564,6 +617,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudAngle)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaterSpread)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudZoom)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRad)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -615,6 +669,9 @@
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.NumericUpDown nudRad;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Button button8;
     }
 }
 

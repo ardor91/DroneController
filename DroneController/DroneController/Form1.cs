@@ -16,9 +16,13 @@ namespace DroneController
         public List<Point> polygon;
         public List<Polygon> polygons;
         public List<Point> translatedPolygon;
+        public List<Polygon> sectors;
         public Point startPoint;
+        public Polygon currentSector;
         public bool isDrawing = false;
         public bool isPickingStart = false;
+        public bool isSectorDrawing = false;
+        public bool isWrongPosition = false;
         public Graphics drawArea;
         public Pen pen;
         public Point currentMousePosition;
@@ -52,11 +56,13 @@ namespace DroneController
             lines = new List<Line>();
             originalLines = new List<Line>();
             polygons = new List<Polygon>();
+            sectors = new List<Polygon>();
+            currentSector = new Polygon();
 
             offsetX = panel1.Width / 4;
             offsetY = panel1.Height / 2;
             prepareGraphics();
-            
+
         }
 
         public void prepareGraphics()
@@ -72,6 +78,14 @@ namespace DroneController
                 pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
 
             drawArea.DrawLine(pen, start, end);
+        }
+
+        public void drawCircle(Color color, int radius, bool isDashed, Point center)
+        {
+            pen = new Pen(color, 1);
+            if (isDashed)
+                pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            drawArea.DrawEllipse(pen, new Rectangle(center.X - radius / 2, center.Y - radius / 2, radius, radius));
         }
 
         public void drawRectangle(Color color, int width, bool isDashed, Point start, Point size)
@@ -108,7 +122,7 @@ namespace DroneController
             if (googleImage != null)
             //panel1.BackgroundImage = googleImage;
             {
-                drawArea.DrawImage(googleImage, -panel1.Width/4, -panel1.Height/2);
+                drawArea.DrawImage(googleImage, -panel1.Width / 4, -panel1.Height / 2);
             }
 
             if (polygon.Count > 0 && showOriginal)
@@ -130,6 +144,20 @@ namespace DroneController
                     drawLine(Color.Green, 2, false, prevPoint, polygon[0]);
                 }
             }
+            if(currentSector != null && isSectorDrawing && currentSector.Points.Count > 0)
+            {
+                var prev = currentSector.Points[0];
+                for (int i = 1; i < currentSector.Points.Count; i++)
+                {
+                    drawLine(Color.Orange, 3, false, prev, currentSector.Points[i]);
+                    prev = currentSector.Points[i];
+                }
+                var ccolor = isWrongPosition ? Color.Red : Color.GreenYellow;
+                drawLine(ccolor, 2, false, prev, currentMousePosition);
+                prev = currentMousePosition;
+                drawLine(ccolor, 2, false, prev, currentSector.Points[0]);
+                //currentSector.Draw(drawArea, Color.Orange, 3);
+            }
 
             if (showTemp.Checked)
             {
@@ -150,7 +178,10 @@ namespace DroneController
             if (startPoint != null)
             {
                 if (isPickingStart)
+                {
                     drawRectangle(Color.Red, 1, true, currentMousePosition, new Point(10, 10));
+                    drawCircle(Color.Red, Convert.ToInt32(nudRad.Value), true, currentMousePosition);
+                }
                 else
                     drawRectangle(Color.Red, 2, false, startPoint, new Point(10, 10));
             }
@@ -177,9 +208,16 @@ namespace DroneController
             }
 
             //draw polygons
-            foreach (var poly in polygons)
+            foreach (var poly in sectors)
             {
-                poly.Draw(drawArea, Color.Red, 3);
+                poly.Draw(drawArea, Color.Green, 2);
+            }
+            //if(currentSector != null)
+                
+
+            if (startPoint != null)
+            {
+                drawCircle(Color.Red, Convert.ToInt32(nudRad.Value), true, startPoint);
             }
             REDRAW_NEEDED = false;
         }
@@ -214,6 +252,20 @@ namespace DroneController
                     Func.CalculateSquare(polygon);
                 }
             }
+            if (isSectorDrawing)
+            {
+                if (!isWrongPosition)
+                {
+                    if (e.Button == MouseButtons.Left)
+                        currentSector.Points.Add(new Point(e.Location.X - offsetX, e.Location.Y - offsetY));
+                    if (e.Button == MouseButtons.Right)
+                    {
+                        isSectorDrawing = false;
+                        sectors.Add(currentSector);
+                        currentSector = null;
+                    }
+                }
+            }
             if (isPickingStart)
             {
                 startPoint = new Point(e.Location.X - offsetX, e.Location.Y - offsetY);
@@ -235,10 +287,11 @@ namespace DroneController
                 drawArea.TranslateTransform((oldMouseX - e.Location.X) * -1, (oldMouseY - e.Location.Y) * -1);
                 oldMouseX = e.Location.X;
                 oldMouseY = e.Location.Y;
-                
+
             }
+            
             currentMousePosition = new Point(
-                e.Location.X - offsetX, 
+                e.Location.X - offsetX,
                 e.Location.Y - offsetY);
             lblCursorX.Text = currentMousePosition.X + "";
             lblCursorY.Text = currentMousePosition.Y + "";
@@ -246,6 +299,17 @@ namespace DroneController
             // y - longitude
             lblLat.Text = (leftBottomCorner.Latitude + (640 - e.Location.Y) * stepPerY).ToString();
             lblLng.Text = (leftBottomCorner.Longitude + (e.Location.X) * stepPerX).ToString();
+
+            if(isSectorDrawing)
+            {
+                isWrongPosition = false;
+                //(x - center_x)^2 + (y - center_y)^2 <= radius^2
+                if(Math.Pow((currentMousePosition.X - startPoint.X), 2) + Math.Pow((currentMousePosition.Y - startPoint.Y), 2) > Math.Pow(Convert.ToInt32(nudRad.Value), 2))
+                {
+                    isWrongPosition = true;
+                }
+            }
+
             REDRAW_NEEDED = true;
         }
 
@@ -262,7 +326,7 @@ namespace DroneController
             }
         }
 
-         
+
 
         private void markupBtn_Click(object sender, EventArgs e)
         {
@@ -278,7 +342,7 @@ namespace DroneController
                 int step = Convert.ToInt32(nudWaterSpread.Value);
 
                 originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon, angle, step));
-                originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon, angle + 90, step));
+                //originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon, angle + 90, step));
 
                 REDRAW_NEEDED = true;
 
@@ -287,7 +351,7 @@ namespace DroneController
                     drawTimer_Tick(sender, e);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show("Build impossible. Sorry... =(");
             }
@@ -297,7 +361,7 @@ namespace DroneController
         public void AddDebug(params Point[] p)
         {
             var d = new Debug(p.Length == 1 ? ObjectType.POINT : p.Length == 2 ? ObjectType.LINE : ObjectType.RECTANGLE);
-            foreach(var pp in p)
+            foreach (var pp in p)
                 d.AddPoint(pp);
             debug.Add(d);
         }
@@ -326,7 +390,7 @@ namespace DroneController
         {
             var d = new Debug(p.Length == 1 ? ObjectType.POINT : p.Length == 2 ? ObjectType.LINE : ObjectType.RECTANGLE, new List<Point>(), color);
             foreach (var pp in p)
-                d.AddPoint(new Point((int) pp.X, (int) pp.Y));
+                d.AddPoint(new Point((int)pp.X, (int)pp.Y));
             debug.Add(d);
         }
 
@@ -351,27 +415,27 @@ namespace DroneController
         {
             var flag = true;
             int currentIndex = 0;
-            while(flag)
+            while (flag)
             {
-                for(int i = 1; i < polygon.Count; i++)
+                for (int i = 1; i < polygon.Count; i++)
                 {
                     SplitLine(i - 1, i, threshold);
                 }
                 SplitLine(polygon.Count - 1, 0, threshold);
 
                 flag = false;
-                for(int i=1; i<polygon.Count;i++)
+                for (int i = 1; i < polygon.Count; i++)
                 {
-                    if(Func.GetDistance(polygon[i-1], polygon[i]) > threshold)
+                    if (Func.GetDistance(polygon[i - 1], polygon[i]) > threshold)
                     {
                         flag = true;
                         break;
                     }
                 }
-                if (Func.GetDistance(polygon[polygon.Count-1], polygon[0]) > threshold)
+                if (Func.GetDistance(polygon[polygon.Count - 1], polygon[0]) > threshold)
                 {
                     flag = true;
-                    
+
                 }
             }
         }
@@ -382,7 +446,7 @@ namespace DroneController
             var p2 = polygon[endIndex];
             var distance = Func.GetDistance(p1, p2);
 
-            if(distance > threshold)
+            if (distance > threshold)
             {
                 var newPoint = new Point((p1.X + p2.X) / 2, (p1.Y + p2.Y) / 2);
                 polygon.Insert(endIndex, newPoint);
@@ -458,7 +522,7 @@ namespace DroneController
             //map.Points.Clear();
             map.Latitude = Convert.ToDouble(txtCenterLat.Text);
             map.Longitude = Convert.ToDouble(txtCenterLng.Text);
-            
+
             relativeCenter = prj.FromLatLngToPoint(new GpsPoint(Convert.ToDouble(txtCenterLat.Text), Convert.ToDouble(txtCenterLng.Text)));
             var scale = Math.Pow(2, map.Zoom);
             var pointSW = new PointD((relativeCenter.X - (640.0 / 2.0) / scale), (relativeCenter.Y + (640.0 / 2.0) / scale));
@@ -478,18 +542,18 @@ namespace DroneController
             stepPerY = diffY / 640.0;
 
             leftBottomCorner = latLonSW;
-            
-            map.Points.AddRange(new List<GpsPoint>() { latLonSW, latLonNE});
 
-            if(originalLines.Count > 0)
+            map.Points.AddRange(new List<GpsPoint>() { latLonSW, latLonNE });
+
+            if (originalLines.Count > 0)
             {
                 var order = true;
-                foreach(var line in originalLines)
+                foreach (var line in originalLines)
                 {
                     var p1 = new GpsPoint((leftBottomCorner.Latitude + (640 - (line.P1.Y + offsetY)) * stepPerY),
-                                          (leftBottomCorner.Longitude + ( (line.P1.X + offsetX)) * stepPerX));
+                                          (leftBottomCorner.Longitude + ((line.P1.X + offsetX)) * stepPerX));
                     var p2 = new GpsPoint((leftBottomCorner.Latitude + (640 - (line.P2.Y + offsetY)) * stepPerY),
-                                          (leftBottomCorner.Longitude + ( (line.P2.X + offsetX)) * stepPerX));
+                                          (leftBottomCorner.Longitude + ((line.P2.X + offsetX)) * stepPerX));
 
                     /*var longitude = (leftBottomCorner.Longitude + e.Location.X * stepPerX);
                         var latitude = (leftBottomCorner.Latitude + (640 - e.Location.Y) * stepPerY);*/
@@ -497,7 +561,7 @@ namespace DroneController
                     if (order)
                     {
                         map.Path.Add(p1);
-                        map.Path.Add(p2);                
+                        map.Path.Add(p2);
                     }
                     else
                     {
@@ -519,7 +583,7 @@ namespace DroneController
             map.Zoom = Convert.ToInt32(nudZoom.Value);
             googleImage = map.GetImage();
             var tPolygon = new List<Point>();
-            foreach(var point in translatedPolygon)
+            foreach (var point in translatedPolygon)
             {
                 tPolygon.Add(new Point(point.X * change * 2, point.Y * change * 2));
             }
@@ -568,12 +632,12 @@ namespace DroneController
                     if (prevHLine == null)
                     {
                         //if (vline.P1.X >= hline.P1.X && vline.P2.X >= hline.P1.X) continue;
-                        if(prevVLine == null)
+                        if (prevVLine == null)
                         {
                             var intersection = new PointD(0, 0);
                             var firstPointIndex = -1;
                             var lastPointIndex = -1;
-                            if(Function.LineSegmentsIntersect(hline, tVline, out intersection))
+                            if (Function.LineSegmentsIntersect(hline, tVline, out intersection))
                             {
                                 var prevPoint = translatedPolygon[0];
                                 var pIntH = new PointD(0, 0);
@@ -582,9 +646,9 @@ namespace DroneController
                                 var intersectingV = new PointD(0, 0);
                                 for (int i = 1; i < translatedPolygon.Count; i++)
                                 {
-                                    if(Function.LineSegmentsIntersect(new Line(prevPoint, translatedPolygon[i]), hline, out pIntH))
+                                    if (Function.LineSegmentsIntersect(new Line(prevPoint, translatedPolygon[i]), hline, out pIntH))
                                     {
-                                        if(pIntH.Y < intersection.Y)
+                                        if (pIntH.Y < intersection.Y)
                                         {
                                             firstPointIndex = i - 1;
                                             intersectingH = pIntH;
@@ -601,9 +665,9 @@ namespace DroneController
                                     prevPoint = translatedPolygon[i];
                                 }
 
-                                if(firstPointIndex != -1 && lastPointIndex != -1)
+                                if (firstPointIndex != -1 && lastPointIndex != -1)
                                 {
-                                    if(firstPointIndex == lastPointIndex)
+                                    if (firstPointIndex == lastPointIndex)
                                     {
                                         polygons.Add(new Polygon(intersection.ToPoint(), pIntH.ToPoint(), pIntV.ToPoint()));
                                     }
@@ -649,14 +713,14 @@ namespace DroneController
                                     {
                                         i = -1;
                                     }
-                                    if(translatedPolygon[i+1].Y > tVline.P1.Y)
+                                    if (translatedPolygon[i + 1].Y > tVline.P1.Y)
                                     {
                                         flag = true;
                                         break;
                                     }
                                     points.Add(translatedPolygon[i + 1]);
                                 }
-                                if(flag)
+                                if (flag)
                                 {
                                     for (int i = startInd; i >= endInd; i--)
                                     {
@@ -670,7 +734,7 @@ namespace DroneController
                                             break;
                                         }
                                         points.Add(translatedPolygon[i - 1]);
-                                        
+
                                     }
                                 }
                                 polygon.Points.AddRange(points);
@@ -690,7 +754,7 @@ namespace DroneController
                         //there is a prev H line
                     }
                     prevVLine = tVline;
-                    
+
                 }
                 prevHLine = hline;
                 prevVLine = null;
@@ -725,6 +789,25 @@ namespace DroneController
             }
             else
                 MessageBox.Show("No intersection =(");
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            if (polygon == null || polygon.Count <= 2)
+            {
+                MessageBox.Show("Create a valid Polygon first!");
+                return;
+            }
+            if (isSectorDrawing)
+            {
+                isSectorDrawing = false;
+                sectors.Add(currentSector);
+                currentSector = null;
+            }
+            else
+            {
+                isSectorDrawing = true;
+            }
         }
     }
 }
