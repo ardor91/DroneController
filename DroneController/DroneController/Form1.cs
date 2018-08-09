@@ -23,6 +23,8 @@ namespace DroneController
         public bool isPickingStart = false;
         public bool isSectorDrawing = false;
         public bool isWrongPosition = false;
+        public bool isWrongNearestPosition = false;
+        public Point nearestIntersection;
         public Graphics drawArea;
         public Pen pen;
         public Point currentMousePosition;
@@ -58,6 +60,7 @@ namespace DroneController
             polygons = new List<Polygon>();
             sectors = new List<Polygon>();
             currentSector = new Polygon();
+            nearestIntersection = new Point();
 
             offsetX = panel1.Width / 4;
             offsetY = panel1.Height / 2;
@@ -156,7 +159,16 @@ namespace DroneController
                 drawLine(ccolor, 2, false, prev, currentMousePosition);
                 prev = currentMousePosition;
                 drawLine(ccolor, 2, false, prev, currentSector.Points[0]);
+                
                 //currentSector.Draw(drawArea, Color.Orange, 3);
+            }
+            if(isSectorDrawing)
+            {
+                if (nearestIntersection != null && nearestIntersection != Point.Empty)
+                {
+                    SolidBrush brush = isWrongNearestPosition ? new SolidBrush(Color.Red) : new SolidBrush(Color.Blue);
+                    drawArea.FillRectangle(brush, new Rectangle(nearestIntersection.X - 3, nearestIntersection.Y - 3, 6, 6));
+                }
             }
 
             if (showTemp.Checked)
@@ -222,6 +234,11 @@ namespace DroneController
             REDRAW_NEEDED = false;
         }
 
+        public void Info(Object text)
+        {
+            log.Text = text.ToString() + "\n";
+        }
+
         private void btnDrawPolygon_Click(object sender, EventArgs e)
         {
             showOriginal = true;
@@ -255,7 +272,14 @@ namespace DroneController
             if (isSectorDrawing)
             {
                 if (e.Button == MouseButtons.Left && !isWrongPosition)
-                    currentSector.Points.Add(new Point(e.Location.X - offsetX, e.Location.Y - offsetY));
+                {
+                    if (nearestIntersection != null && nearestIntersection != Point.Empty && !isWrongNearestPosition)
+                    {
+                        currentSector.Points.Add(nearestIntersection);
+                    }
+                    else
+                        currentSector.Points.Add(new Point(e.Location.X - offsetX, e.Location.Y - offsetY));
+                }
                 if (e.Button == MouseButtons.Right)
                 {
                     isSectorDrawing = false;
@@ -301,8 +325,9 @@ namespace DroneController
             {
                 label15.Text = startPoint.X + ";" + startPoint.Y + "------" + currentMousePosition.X + ";" + currentMousePosition.Y;
                 isWrongPosition = false;
+                isWrongNearestPosition = false;
                 //(x - center_x)^2 + (y - center_y)^2 <= radius^2
-                if(Math.Pow((currentMousePosition.X - startPoint.X), 2) + Math.Pow((currentMousePosition.Y - startPoint.Y), 2) > Math.Pow(Convert.ToInt32(nudRad.Value) / 2, 2))
+                if (Math.Pow((currentMousePosition.X - startPoint.X), 2) + Math.Pow((currentMousePosition.Y - startPoint.Y), 2) > Math.Pow(Convert.ToInt32(nudRad.Value) / 2, 2))
                 {
                     isWrongPosition = true;                    
                 }
@@ -310,6 +335,13 @@ namespace DroneController
                 {
                     isWrongPosition = true;
                 }
+
+                nearestIntersection = getNearestToLinePoint(currentMousePosition, polygon, int.MaxValue, int.MaxValue, 40);
+                if (Math.Pow((nearestIntersection.X - startPoint.X), 2) + Math.Pow((nearestIntersection.Y - startPoint.Y), 2) > Math.Pow(Convert.ToInt32(nudRad.Value) / 2, 2))
+                {
+                    isWrongNearestPosition = true;
+                }
+                
             }
 
             REDRAW_NEEDED = true;
@@ -378,7 +410,84 @@ namespace DroneController
             return isInside;
         }
 
+        public Point getNearestToLinePoint(Point mousePosition, List<Point> polygon, int boundX, int boundY, int lambda)
+        {
+            var minDistance = double.MaxValue;
+            foreach (var point in polygon)
+            {
+                var distance = getDistance(point, mousePosition);
+                if (distance <= lambda && distance < minDistance)
+                {
+                    minDistance = distance;
+                    return point;
 
+                }
+            }
+            Point prevPoint = polygon[0];
+
+            
+            var minPoint = new Point();
+            string text = "";
+            var array = polygon.Skip(1);
+            
+            for (int i = 0; i<=polygon.Count; i++)
+            {
+                Point p = new Point();
+                if (i == polygon.Count)
+                    p = polygon[0];
+                else
+                    p = polygon[i];
+                var line = new Line(prevPoint, p);
+                text += line.P1.X + ":" + line.P1.Y + ";" + line.P2.X + ":" + line.P2.Y + "\n";
+                var hLine = new Line(new Point(mousePosition.X, 0), new Point(mousePosition.X, boundY));
+                var vLine = new Line(new Point(0, mousePosition.Y), new Point(boundX, mousePosition.Y));
+
+                var intersectionX = new PointD(0, 0);
+                var intersectionY = new PointD(0, 0);
+
+                var intersectsX = Function.LineSegmentsIntersect(line, vLine, out intersectionX);
+                var intersectsY = Function.LineSegmentsIntersect(line, hLine, out intersectionY);
+
+                text += "MOUSE - " + mousePosition.X + ":" + mousePosition.Y + "\n";
+                if (intersectsX)
+                {
+                    text += "Intersects X - "+ intersectionX.X + ":" + intersectionX.Y + "\n";
+                    var t = Math.Abs(intersectionX.ToPoint().X - mousePosition.X);
+                    text += "Distance - " + t + "\n";
+                    if (t < minDistance)
+                    {
+                        minDistance = t;
+                        minPoint = intersectionX.ToPoint();
+                    }                    
+                }
+
+                if(intersectsY)
+                {
+                    text += "Intersects Y - " + intersectionY.X + ":" + intersectionY.Y + "\n";
+                    var t = Math.Abs(intersectionY.ToPoint().Y - mousePosition.Y);
+                    text += "Distance - " + t + "\n";
+                    if (t < minDistance)
+                    {
+                        minDistance = t;
+                        minPoint = intersectionY.ToPoint();
+                    }
+                }
+                prevPoint = p;
+            }
+            text += "MinDistance: " + minDistance;
+            Info(text);
+            if (minDistance <= lambda)
+            {
+                return minPoint;
+            }
+            else
+                return Point.Empty;
+        }
+
+        private double getDistance(Point p1, Point p2)
+        {
+            return Math.Sqrt((Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2)));
+        }
 
         private void markupBtn_Click(object sender, EventArgs e)
         {
@@ -393,7 +502,15 @@ namespace DroneController
 
                 int step = Convert.ToInt32(nudWaterSpread.Value);
 
-                originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon, angle, step));
+                if(checkBox2.Checked || sectors.Count == 0)
+                    originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon, angle, step));
+                else
+                {
+                    foreach(var polygon in sectors)
+                    {
+                        originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon.Points, angle, step));
+                    }
+                }
                 //originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon, angle + 90, step));
 
                 REDRAW_NEEDED = true;

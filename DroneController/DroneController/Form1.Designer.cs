@@ -78,10 +78,15 @@
             this.button8 = new System.Windows.Forms.Button();
             this.label15 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
+            this.log = new System.Windows.Forms.RichTextBox();
+            this.checkBox2 = new System.Windows.Forms.CheckBox();
+            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.gridSizeLbl = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.nudAngle)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudWaterSpread)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudZoom)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRad)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -485,7 +490,7 @@
             // 
             // splitToPolygons
             // 
-            this.splitToPolygons.Location = new System.Drawing.Point(835, 192);
+            this.splitToPolygons.Location = new System.Drawing.Point(914, 192);
             this.splitToPolygons.Name = "splitToPolygons";
             this.splitToPolygons.Size = new System.Drawing.Size(146, 55);
             this.splitToPolygons.TabIndex = 45;
@@ -582,11 +587,61 @@
             this.label16.TabIndex = 53;
             this.label16.Text = "Angle";
             // 
+            // log
+            // 
+            this.log.Location = new System.Drawing.Point(1031, 279);
+            this.log.Name = "log";
+            this.log.Size = new System.Drawing.Size(219, 317);
+            this.log.TabIndex = 54;
+            this.log.Text = "";
+            // 
+            // checkBox2
+            // 
+            this.checkBox2.AutoSize = true;
+            this.checkBox2.Checked = true;
+            this.checkBox2.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBox2.Location = new System.Drawing.Point(827, 208);
+            this.checkBox2.Name = "checkBox2";
+            this.checkBox2.Size = new System.Drawing.Size(84, 17);
+            this.checkBox2.TabIndex = 55;
+            this.checkBox2.Text = "fillAllPolygon";
+            this.checkBox2.UseVisualStyleBackColor = true;
+            // 
+            // numericUpDown1
+            // 
+            this.numericUpDown1.Location = new System.Drawing.Point(899, 7);
+            this.numericUpDown1.Maximum = new decimal(new int[] {
+            21,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Name = "numericUpDown1";
+            this.numericUpDown1.Size = new System.Drawing.Size(42, 20);
+            this.numericUpDown1.TabIndex = 57;
+            this.numericUpDown1.Value = new decimal(new int[] {
+            16,
+            0,
+            0,
+            0});
+            // 
+            // gridSizeLbl
+            // 
+            this.gridSizeLbl.AutoSize = true;
+            this.gridSizeLbl.Location = new System.Drawing.Point(859, 9);
+            this.gridSizeLbl.Name = "gridSizeLbl";
+            this.gridSizeLbl.Size = new System.Drawing.Size(34, 13);
+            this.gridSizeLbl.TabIndex = 56;
+            this.gridSizeLbl.Text = "Zoom";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1262, 720);
+            this.Controls.Add(this.numericUpDown1);
+            this.Controls.Add(this.gridSizeLbl);
+            this.Controls.Add(this.checkBox2);
+            this.Controls.Add(this.log);
             this.Controls.Add(this.label16);
             this.Controls.Add(this.label15);
             this.Controls.Add(this.button8);
@@ -640,6 +695,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudWaterSpread)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudZoom)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRad)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -696,6 +752,10 @@
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.RichTextBox log;
+        private System.Windows.Forms.CheckBox checkBox2;
+        private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.Label gridSizeLbl;
     }
 }
 
