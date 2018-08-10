@@ -31,6 +31,7 @@ namespace DroneController
         public Pen debugPen = new Pen(Color.Red, 2);
         public Pen triPen = new Pen(Color.Blue, 1);
         public Pen oriPen = new Pen(Color.RosyBrown, 1);
+        public Pen oriPenSel = new Pen(Color.Red, 1);
 
         public List<Debug> debug;
         public List<Triangle> triangles;
@@ -219,6 +220,17 @@ namespace DroneController
                 lni.DrawObject(drawArea, oriPen);
             }
 
+            //draw orlines
+            foreach (var sector in sectors)
+            {
+                if (sector.Path == null) continue;
+                var selectedSector = sectorBox.SelectedItem == null ? "" : sectorBox.SelectedItem.ToString();
+                foreach (var lni in sector.Path)
+                {
+                    lni.DrawObject(drawArea, sector.Name == selectedSector ? oriPenSel : oriPen);
+                }
+            }
+
             //draw polygons
             foreach (var poly in sectors)
             {
@@ -232,11 +244,6 @@ namespace DroneController
                 drawCircle(Color.Red, Convert.ToInt32(nudRad.Value), true, startPoint);
             }
             REDRAW_NEEDED = false;
-        }
-
-        public void Info(Object text)
-        {
-            log.Text = text.ToString() + "\n";
         }
 
         private void btnDrawPolygon_Click(object sender, EventArgs e)
@@ -271,19 +278,21 @@ namespace DroneController
             }
             if (isSectorDrawing)
             {
-                if (e.Button == MouseButtons.Left && !isWrongPosition)
+                if (e.Button == MouseButtons.Left)
                 {
                     if (nearestIntersection != null && nearestIntersection != Point.Empty && !isWrongNearestPosition)
                     {
                         currentSector.Points.Add(nearestIntersection);
                     }
                     else
-                        currentSector.Points.Add(new Point(e.Location.X - offsetX, e.Location.Y - offsetY));
+                        if(!isWrongPosition)
+                            currentSector.Points.Add(new Point(e.Location.X - offsetX, e.Location.Y - offsetY));
                 }
                 if (e.Button == MouseButtons.Right)
                 {
                     isSectorDrawing = false;
                     sectors.Add(currentSector);
+                    sectorBox.Items.Add(currentSector.Name);
                     currentSector = null;
                 }
             }
@@ -335,8 +344,18 @@ namespace DroneController
                 {
                     isWrongPosition = true;
                 }
-
-                nearestIntersection = getNearestToLinePoint(currentMousePosition, polygon, int.MaxValue, int.MaxValue, 40);
+                var minDistance = double.MaxValue;
+                nearestIntersection = getNearestToLinePoint(currentMousePosition, polygon, int.MaxValue, int.MaxValue, Convert.ToInt32(nudStep.Value), out minDistance);
+                foreach(var sect in sectors)
+                {
+                    var mT = double.MaxValue;
+                    var t = getNearestToLinePoint(currentMousePosition, sect.Points, int.MaxValue, int.MaxValue, Convert.ToInt32(nudStep.Value), out mT);
+                    if(mT < minDistance)
+                    {
+                        minDistance = mT;
+                        nearestIntersection = t;
+                    }
+                }
                 if (Math.Pow((nearestIntersection.X - startPoint.X), 2) + Math.Pow((nearestIntersection.Y - startPoint.Y), 2) > Math.Pow(Convert.ToInt32(nudRad.Value) / 2, 2))
                 {
                     isWrongNearestPosition = true;
@@ -410,7 +429,7 @@ namespace DroneController
             return isInside;
         }
 
-        public Point getNearestToLinePoint(Point mousePosition, List<Point> polygon, int boundX, int boundY, int lambda)
+        public Point getNearestToLinePoint(Point mousePosition, List<Point> polygon, int boundX, int boundY, int lambda, out double mindistance)
         {
             var minDistance = double.MaxValue;
             foreach (var point in polygon)
@@ -419,6 +438,7 @@ namespace DroneController
                 if (distance <= lambda && distance < minDistance)
                 {
                     minDistance = distance;
+                    mindistance = minDistance;
                     return point;
 
                 }
@@ -427,7 +447,7 @@ namespace DroneController
 
             
             var minPoint = new Point();
-            string text = "";
+            //string text = "";
             var array = polygon.Skip(1);
             
             for (int i = 0; i<=polygon.Count; i++)
@@ -438,7 +458,7 @@ namespace DroneController
                 else
                     p = polygon[i];
                 var line = new Line(prevPoint, p);
-                text += line.P1.X + ":" + line.P1.Y + ";" + line.P2.X + ":" + line.P2.Y + "\n";
+                //text += line.P1.X + ":" + line.P1.Y + ";" + line.P2.X + ":" + line.P2.Y + "\n";
                 var hLine = new Line(new Point(mousePosition.X, 0), new Point(mousePosition.X, boundY));
                 var vLine = new Line(new Point(0, mousePosition.Y), new Point(boundX, mousePosition.Y));
 
@@ -448,12 +468,12 @@ namespace DroneController
                 var intersectsX = Function.LineSegmentsIntersect(line, vLine, out intersectionX);
                 var intersectsY = Function.LineSegmentsIntersect(line, hLine, out intersectionY);
 
-                text += "MOUSE - " + mousePosition.X + ":" + mousePosition.Y + "\n";
+                //text += "MOUSE - " + mousePosition.X + ":" + mousePosition.Y + "\n";
                 if (intersectsX)
                 {
-                    text += "Intersects X - "+ intersectionX.X + ":" + intersectionX.Y + "\n";
+                    //text += "Intersects X - "+ intersectionX.X + ":" + intersectionX.Y + "\n";
                     var t = Math.Abs(intersectionX.ToPoint().X - mousePosition.X);
-                    text += "Distance - " + t + "\n";
+                    //text += "Distance - " + t + "\n";
                     if (t < minDistance)
                     {
                         minDistance = t;
@@ -463,9 +483,9 @@ namespace DroneController
 
                 if(intersectsY)
                 {
-                    text += "Intersects Y - " + intersectionY.X + ":" + intersectionY.Y + "\n";
+                    //text += "Intersects Y - " + intersectionY.X + ":" + intersectionY.Y + "\n";
                     var t = Math.Abs(intersectionY.ToPoint().Y - mousePosition.Y);
-                    text += "Distance - " + t + "\n";
+                    //text += "Distance - " + t + "\n";
                     if (t < minDistance)
                     {
                         minDistance = t;
@@ -474,14 +494,18 @@ namespace DroneController
                 }
                 prevPoint = p;
             }
-            text += "MinDistance: " + minDistance;
-            Info(text);
+            //text += "MinDistance: " + minDistance;
+            //Info(text);
             if (minDistance <= lambda)
             {
+                mindistance = minDistance;
                 return minPoint;
             }
             else
+            {
+                mindistance = double.MaxValue;
                 return Point.Empty;
+            }
         }
 
         private double getDistance(Point p1, Point p2)
@@ -508,7 +532,11 @@ namespace DroneController
                 {
                     foreach(var polygon in sectors)
                     {
-                        originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon.Points, angle, step));
+                        if (polygon.Path != null)
+                            polygon.Path.Clear();
+                        else
+                            polygon.Path = new List<Line>();
+                        polygon.Path.AddRange(Func.GetPathLinesFromPolygon(polygon.Points, polygon.Angle, polygon.Step));
                     }
                 }
                 //originalLines.AddRange(Func.GetPathLinesFromPolygon(polygon, angle + 90, step));
@@ -663,6 +691,12 @@ namespace DroneController
         {
             if (nudAngle.Value == -5) nudAngle.Value = 355;
             if (nudAngle.Value == 365) nudAngle.Value = 5;
+            if (sectorBox.SelectedItem != null)
+            {
+                var selectedSector = sectorBox.SelectedItem.ToString();
+                var sector = sectors.Where(s => s.Name == selectedSector).First();
+                sector.Angle = Convert.ToInt32(nudAngle.Value);
+            }
             markupBtn_Click(sender, e);
         }
 
@@ -674,6 +708,12 @@ namespace DroneController
 
         private void nudWaterSpread_ValueChanged(object sender, EventArgs e)
         {
+            if (sectorBox.SelectedItem != null)
+            {
+                var selectedSector = sectorBox.SelectedItem.ToString();
+                var sector = sectors.Where(s => s.Name == selectedSector).First();
+                sector.Step = Convert.ToInt32(nudWaterSpread.Value);
+            }
             markupBtn_Click(sender, e);
         }
 
@@ -971,13 +1011,22 @@ namespace DroneController
             {
                 isSectorDrawing = false;
                 sectors.Add(currentSector);
+                sectorBox.Items.Add(currentSector.Name);
                 currentSector = null;
             }
             else
             {
                 isSectorDrawing = true;
                 currentSector = new Polygon();
+                currentSector.Name = "SECTOR #00" + (sectors.Count + 1);
+                currentSector.Angle = Convert.ToInt32(nudAngle.Value);
+                currentSector.Step = Convert.ToInt32(nudWaterSpread.Value);
             }
+        }
+
+        private void sectorBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            REDRAW_NEEDED = true;
         }
     }
 }

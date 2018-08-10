@@ -10,6 +10,10 @@ namespace DroneController
     public class Polygon
     {
         public List<Point> Points { get; set; }
+        public List<Line> Path { get; set; }
+        public int Angle { get; set; }
+        public string Name { get; set; }
+        public int Step { get; set; }
 
         public Polygon(List<Point> points)
         {
