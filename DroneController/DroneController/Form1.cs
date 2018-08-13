@@ -1,4 +1,5 @@
 ﻿using DroneController.Helpers;
+using DroneController.Config;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -24,6 +25,7 @@ namespace DroneController
         public bool isSectorDrawing = false;
         public bool isWrongPosition = false;
         public bool isWrongNearestPosition = false;
+        public bool isOverMaxDistance = false;
         public Point nearestIntersection;
         public Graphics drawArea;
         public Pen pen;
@@ -49,9 +51,14 @@ namespace DroneController
         MercatorProjection prj = new MercatorProjection();
         PointD relativeCenter = new PointD(0, 0);
 
+        public Settings config;
+
         public Form1()
         {
             InitializeComponent();
+
+            config = Helper.LoadConfig();
+
             polygon = new List<Point>();
             translatedPolygon = new List<Point>();
             debug = new List<Debug>();
@@ -134,7 +141,7 @@ namespace DroneController
                 var prevPoint = polygon[0];
                 for (int i = 1; i < polygon.Count; i++)
                 {
-                    drawArea.FillRectangle(new SolidBrush(Color.Orange), new Rectangle(polygon[i], new Size(5, 5)));
+                    drawArea.FillRectangle(new SolidBrush(Color.Orange), new Rectangle(polygon[i].X - 2, polygon[i].Y - 2, 5, 5));
                     drawLine(Color.Green, 2, false, prevPoint, polygon[i]);
                     prevPoint = polygon[i];
                 }
@@ -156,7 +163,7 @@ namespace DroneController
                     drawLine(Color.Orange, 3, false, prev, currentSector.Points[i]);
                     prev = currentSector.Points[i];
                 }
-                var ccolor = isWrongPosition ? Color.Red : Color.GreenYellow;
+                var ccolor = isWrongPosition ? Color.Red : (isOverMaxDistance ? Color.Orange : Color.GreenYellow);
                 drawLine(ccolor, 2, false, prev, currentMousePosition);
                 prev = currentMousePosition;
                 drawLine(ccolor, 2, false, prev, currentSector.Points[0]);
@@ -167,7 +174,7 @@ namespace DroneController
             {
                 if (nearestIntersection != null && nearestIntersection != Point.Empty)
                 {
-                    SolidBrush brush = isWrongNearestPosition ? new SolidBrush(Color.Red) : new SolidBrush(Color.Blue);
+                    SolidBrush brush = isOverMaxDistance ? new SolidBrush(Color.Orange) : new SolidBrush(Color.Blue);
                     drawArea.FillRectangle(brush, new Rectangle(nearestIntersection.X - 3, nearestIntersection.Y - 3, 6, 6));
                 }
             }
@@ -291,8 +298,11 @@ namespace DroneController
                 if (e.Button == MouseButtons.Right)
                 {
                     isSectorDrawing = false;
-                    sectors.Add(currentSector);
-                    sectorBox.Items.Add(currentSector.Name);
+                    if (currentSector.Points.Count > 0)
+                    {
+                        sectors.Add(currentSector);
+                        sectorBox.Items.Add(currentSector.Name);
+                    }
                     currentSector = null;
                 }
             }
@@ -335,10 +345,11 @@ namespace DroneController
                 label15.Text = startPoint.X + ";" + startPoint.Y + "------" + currentMousePosition.X + ";" + currentMousePosition.Y;
                 isWrongPosition = false;
                 isWrongNearestPosition = false;
+                isOverMaxDistance = false;
                 //(x - center_x)^2 + (y - center_y)^2 <= radius^2
                 if (Math.Pow((currentMousePosition.X - startPoint.X), 2) + Math.Pow((currentMousePosition.Y - startPoint.Y), 2) > Math.Pow(Convert.ToInt32(nudRad.Value) / 2, 2))
                 {
-                    isWrongPosition = true;                    
+                    isOverMaxDistance = true;                    
                 }
                 if (!IsInPolygon3(polygon.ToArray(), currentMousePosition))
                 {
@@ -358,7 +369,7 @@ namespace DroneController
                 }
                 if (Math.Pow((nearestIntersection.X - startPoint.X), 2) + Math.Pow((nearestIntersection.Y - startPoint.Y), 2) > Math.Pow(Convert.ToInt32(nudRad.Value) / 2, 2))
                 {
-                    isWrongNearestPosition = true;
+                    isOverMaxDistance = true;
                 }
                 
             }
@@ -1010,8 +1021,11 @@ namespace DroneController
             if (isSectorDrawing)
             {
                 isSectorDrawing = false;
-                sectors.Add(currentSector);
-                sectorBox.Items.Add(currentSector.Name);
+                if (currentSector.Points.Count > 0)
+                {
+                    sectors.Add(currentSector);
+                    sectorBox.Items.Add(currentSector.Name);
+                }
                 currentSector = null;
             }
             else
@@ -1027,6 +1041,17 @@ namespace DroneController
         private void sectorBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             REDRAW_NEEDED = true;
+        }
+
+        private void metroButton1_Click(object sender, EventArgs e)
+        {
+            Interface inter = new Interface();
+            inter.ShowDialog();
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Helper.SaveConfig(config);
         }
     }
 }
